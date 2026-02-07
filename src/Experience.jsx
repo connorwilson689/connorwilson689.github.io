@@ -1,46 +1,154 @@
 import { RigidBody } from '@react-three/rapier';
 import Ecctrl from 'ecctrl';
-import { useGLTF } from '@react-three/drei'
+import { useKeyboardControls, useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber' // Needed for animation loop
-import { useRef } from 'react' // Needed to target the jaw
 import * as THREE from 'three' // Needed for math
+import { useThree } from '@react-three/fiber'
+import { useRef, useEffect, useMemo } from 'react' // <--- Add useMemo here
 
 
 function Frog() {
-  // 1. Load the specific parts (nodes) so we can control them
   const { nodes, materials } = useGLTF('./frog.glb')
+  const [, get] = useKeyboardControls()
   const jawRef = useRef()
 
-  // // 2. The Animation Loop (Runs 60 times/sec)
-  // useFrame((state, delta) => {
-  //   // A. Calculate Speed
-  //   // We check how fast the camera/character is moving
-  //   // (In Ecctrl, the character group velocity is tricky to get directly, 
-  //   // so we often cheat and check the joystick or effective movement)
+  useFrame((state, delta) => {
+    const { forward, backward, left, right, leftward, rightward } = get()
     
-  //   // Simple "Is Moving?" check:
-  //   const isMoving = state.controls?.current?.isMoving || false; // (Requires advanced setup)
-    
-  //   // EASIER WAY for now: Just flap constantly for testing
-  //   // Or simpler: Flap based on time
-    
-  //   if (jawRef.current) {
-  //       // Math.sin creates a wave (-1 to 1). We map it to rotation.
-  //       // Speed = 15, Amplitude = 0.2
-  //       jawRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 15) * 0.2
-  //   }
-  // })
+    // Check all movement keys
+    if (forward || backward || left || right || leftward || rightward) {
+        if (jawRef.current) {
+            // FIX: Math.abs() makes negative numbers positive.
+            // Result: The jaw bounces from 0 to 0.4, never going "up" into the head.
+            const flapSpeed = 20
+            const maxOpenAmount = 0.4 // Lower this if it opens too wide
+            
+            jawRef.current.rotation.x = Math.abs(Math.sin(state.clock.elapsedTime * flapSpeed)) * maxOpenAmount
+        }
+    } else {
+        // Reset to perfectly closed (0) when stopped
+        if (jawRef.current) jawRef.current.rotation.x = 0
+    }
+  })
 
   return (
     <group dispose={null}>
-      {/* The Body (Static) */}
-      <mesh geometry={nodes.Body.geometry} material={materials.GreenMaterial || new THREE.MeshStandardMaterial({color: 'green'})} />
+      {/* BODY */}
+      <mesh 
+        geometry={nodes.Body.geometry} 
+        position={nodes.Body.position} 
+        rotation={nodes.Body.rotation}
+        material={materials.GreenMaterial || new THREE.MeshStandardMaterial({color: 'green'})} 
+      />
       
-      {/* The Jaw (Animated) */}
+      {/* JAW */}
       <mesh 
         ref={jawRef}
         geometry={nodes.Jaw.geometry} 
+        position={nodes.Jaw.position} 
+        rotation={nodes.Jaw.rotation} 
         material={materials.GreenMaterial || new THREE.MeshStandardMaterial({color: 'green'})} 
+      />
+    </group>
+  )
+}
+
+
+// function Bicycle() {
+//   const { nodes, materials } = useGLTF('./bicycle.glb')
+//   // Note: Check your specific node names in the console! 
+//   // If your bike is one piece, just use nodes.Bicycle or similar.
+//   // Below assumes separate parts like we discussed.
+
+//   // console.log("My Bike Parts:", nodes)
+//   console.log("My Materials:", materials) // <--- Check this in the browser console!
+  
+//   const frontWheelRef = useRef()
+//   const backWheelRef = useRef()
+
+//   // useFrame((state, delta) => {
+//   //   // Simple rotation animation based on time
+//   //   // Later we can link this to actual velocity
+//   //   const speed = 10
+//   //   if (frontWheelRef.current) frontWheelRef.current.rotation.x -= speed * delta
+//   //   if (backWheelRef.current) backWheelRef.current.rotation.x -= speed * delta
+//   // })
+//   return (
+//     <group dispose={null}>
+//       {/* The Frame */}
+//       {/* Use ['Bracket Notation'] for names with dashes/spaces */}
+//       <mesh 
+//         geometry={nodes['FullBike_-_Frame-1'].geometry} 
+//         material={materials.BikeFrameMat || materials.Material} 
+//       />
+      
+//       {/* The Wheels */}
+//       <mesh 
+//         ref={frontWheelRef} 
+//         geometry={nodes['FullBike_-_Wheel-1'].geometry} 
+//         material={materials.BikeTire || materials.Material} 
+//       />
+      
+//       <mesh 
+//         ref={backWheelRef} 
+//         geometry={nodes['FullBike_-_Wheel-2'].geometry} 
+//         material={materials.BikeTire || materials.Material} 
+//       />
+//     </group>
+//   )
+// }
+
+function Bicycle() {
+  const { nodes, materials } = useGLTF('./bicycle.glb')
+  const [, get] = useKeyboardControls()
+  
+  const frontWheel = useRef()
+  const backWheel = useRef()
+
+  useFrame((state, delta) => {
+    // 1. Get ALL keys
+    const { forward, backward, leftward, rightward } = get()
+    
+    // 2. Check if ANY key is pressed
+    const isMoving = forward || backward || leftward || rightward
+    const speed = 15
+
+    if (isMoving) {
+      // If moving backward, spin reverse. Otherwise spin forward.
+      const direction = backward ? 1 : -1 
+      
+      if (frontWheel.current) frontWheel.current.rotation.x += speed * direction * delta
+      if (backWheel.current) backWheel.current.rotation.x += speed * direction * delta
+    }
+  })
+
+  return (
+    <group dispose={null}>
+      
+      {/* FRAME */}
+      <mesh 
+        geometry={nodes['FullBike_-_Frame-1'].geometry} 
+        position={nodes['FullBike_-_Frame-1'].position} 
+        rotation={nodes['FullBike_-_Frame-1'].rotation}
+        material={materials.BikeFrameMat || materials.Material} 
+      />
+      
+      {/* FRONT WHEEL */}
+      <mesh 
+        ref={frontWheel}
+        geometry={nodes['FullBike_-_Wheel-1'].geometry} 
+        position={nodes['FullBike_-_Wheel-1'].position} 
+        rotation={nodes['FullBike_-_Wheel-1'].rotation}
+        material={materials.BikeTire || materials.Material} 
+      />
+      
+      {/* BACK WHEEL */}
+      <mesh 
+        ref={backWheel}
+        geometry={nodes['FullBike_-_Wheel-2'].geometry} 
+        position={nodes['FullBike_-_Wheel-2'].position} 
+        rotation={nodes['FullBike_-_Wheel-2'].rotation}
+        material={materials.BikeTire || materials.Material} 
       />
     </group>
   )
@@ -52,58 +160,64 @@ function Frog() {
 
 
 
-
-
-
-
 //the stage where i put the actors etc
-export default function Experience() {
+export default function Experience({ activeCharacter }) {
+  
 
-  const suvFrog = useGLTF('./FirstBlender.glb')
+const characterStats = useMemo(() => {
+    if (activeCharacter === 'bike') {
+      return { 
+        speed: 15, jump: 2, scale: 1, 
+        radius: 0.3, height: 0.3
+      }
+    } 
+    else if (activeCharacter === 'rolly') {
+      return { 
+        speed: 20, jump: 10, scale: 0.8, 
+        radius: 1.2, height: 0
+      }
+    } 
+    else { // Frog
+      return { 
+        speed: 6, jump: 10, scale: 0.5, 
+        radius: 0.3, height: 0.3
+      }
+    }
+  }, [activeCharacter])
 
   return (
     <>
-      {/* --- CHARACTER --- */}
-      {/* Ecctrl handles all the complex math for walking/jumping */}
+      {/* --- DYNAMIC CHARACTER --- */}
       <Ecctrl 
-        camInitDis={-5} // Camera distance
+        // 1. Existing props
+        camInitDis={-5} 
         camMaxDis={-5} 
-        maxVelLimit={5} // Walking speed
-        jumpVel={4}     // Jump height
+        maxVelLimit={characterStats.speed} 
+        jumpVel={characterStats.jump}
+        camTargetPos={{ x: 0, y: 1, z: 0 }} 
+        
+        // 2. NEW: Dynamic Size Props
+        capsuleRadius={characterStats.radius}
+        capsuleHalfHeight={characterStats.height}
       >
-        {/* This Sphere represents YOU (Connor) for now */}
-        {/* <mesh castShadow position={[0, 1, 0]}>
-          <sphereGeometry args={[0.5]} />
-          <meshStandardMaterial color="salmon" />
-        </mesh> */}
-
+        
         <group rotation-y={Math.PI} position={[0, -0.5, 0]}>
-            <Frog />
+          {/* The Switcher Logic */}
+            { (activeCharacter === 'bike' || activeCharacter === 'rolly') 
+              ? <Bicycle /> 
+              : <Frog />
+            }
         </group>
-
 
       </Ecctrl>
 
       {/* --- THE WORLD --- */}
-      
-      {/* 1. The Floor (Static = it doesn't move) */}
       <RigidBody type="fixed" friction={1}>
         <mesh position={[0, -1, 0]} receiveShadow>
           <boxGeometry args={[50, 1, 50]} />
           <meshStandardMaterial color="lightblue" />
         </mesh>
       </RigidBody>
-
-      {/* 2. A random box to jump on */}
-      <RigidBody type="fixed" position={[5, 0.5, 0]}>
-        <mesh castShadow>
-          <boxGeometry args={[2, 2, 2]} />
-          <meshStandardMaterial color="orange" />
-        </mesh>
-      </RigidBody>
-
-      {/* my car frog first blender thing */}
-      <primitive object={suvFrog.scene} position={[2, 0, 2]} scale={0.5} />
     </>
   );
 }
