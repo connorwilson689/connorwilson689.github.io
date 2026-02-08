@@ -1,8 +1,9 @@
 import { Canvas } from '@react-three/fiber';
 import { Physics } from '@react-three/rapier';
 import { KeyboardControls } from '@react-three/drei';
-import { Suspense, useState } from 'react'; // <--- Added useState
+import { Suspense, useState } from 'react';
 import Experience from './Experience';
+import { EcctrlJoystick } from 'ecctrl'
 
 
 // 1. Define your keyboard map
@@ -28,9 +29,54 @@ function App() {
   // null = showing menu
   // 'frog' or 'bike' = playing game
   const [character, setCharacter] = useState(null);
-
+  
   return (
     <KeyboardControls map={keyboardMap}>
+  
+      <EcctrlJoystick 
+          // 1. Move Stick (Left)
+          joystickBaseProps={{
+              style: {
+                  // Use FILTER to hide the rainbow colors safely
+                  filter: 'grayscale(100%) brightness(40%)', 
+                  
+                  // Use SCALE to resize (keeps the math working!)
+                  transform: 'scale(1.5)',
+                  transformOrigin: 'bottom left', // Grow from the corner
+                  
+                  position: 'absolute',
+                  bottom: '40px',
+                  left: '40px',
+                  zIndex: 99999, // Force to front
+                  borderRadius: '50%',
+              }
+          }}
+          joystickStickProps={{
+              style: {
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  border: '2px solid black',
+                  // Keep the stick bright
+                  filter: 'brightness(150%) contrast(150%)', 
+              }
+          }}
+          
+          // 2. Jump Button (Right)
+          buttonLargeBaseProps={{
+              style: {
+                  filter: 'grayscale(100%) brightness(40%)', 
+                  transform: 'scale(1.5)',
+                  transformOrigin: 'bottom right',
+                  
+                  position: 'absolute',
+                  bottom: '40px',
+                  right: '40px',
+                  zIndex: 99999,
+                  borderRadius: '50%',
+              }
+          }}
+          buttonNumber={1} 
+      />
       
       {/* --- THE HTML MENU OVERLAY --- */}
       {/* Only show this div if character is null */}
