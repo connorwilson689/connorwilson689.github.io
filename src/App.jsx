@@ -1,10 +1,10 @@
 import { Canvas } from '@react-three/fiber';
 import { Physics } from '@react-three/rapier';
 import { KeyboardControls } from '@react-three/drei';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Experience from './Experience';
-import { EcctrlJoystick } from 'ecctrl'
-
+import { Joystick } from 'react-joystick-component';
+import { useJoystickControls } from 'ecctrl'; // Import the store hook
 
 // 1. Define your keyboard map
 const keyboardMap = [
@@ -25,58 +25,95 @@ const keyboardMap = [
 ];
 
 function App() {
-  // 1. State to track if we have chosen a character yet
-  // null = showing menu
-  // 'frog' or 'bike' = playing game
   const [character, setCharacter] = useState(null);
   
+  const setJoystick = useJoystickControls((state) => state.setJoystick)
+  const pressButton1 = useJoystickControls((state) => state.pressButton1)
+  const releaseButton1 = useJoystickControls((state) => state.releaseButton1)
+  const triggerJump = () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', key: ' ', bubbles: true }));
+  };
+  
+  const releaseJump = () => {
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space', key: ' ', bubbles: true }));
+  };
+
+  // --- FIX #2: THE JUMP SAFETY NET ---
+  // This listens for ANY release event on the whole screen.
+  // It fixes the "Sticky Button" bug 100%.
+  useEffect(() => {
+    const handleRelease = () => {
+      releaseButton1(); 
+    };
+    
+    // Listen to every possible "Let Go" event
+    window.addEventListener('mouseup', handleRelease);
+    window.addEventListener('touchend', handleRelease);
+    window.addEventListener('touchcancel', handleRelease);
+    window.addEventListener('pointerup', handleRelease);
+    
+    return () => {
+      window.removeEventListener('mouseup', handleRelease);
+      window.removeEventListener('touchend', handleRelease);
+      window.removeEventListener('touchcancel', handleRelease);
+      window.removeEventListener('pointerup', handleRelease);
+    };
+  }, [releaseButton1]);
+
+
   return (
     <KeyboardControls map={keyboardMap}>
   
-      <EcctrlJoystick 
-          // 1. Move Stick (Left)
-          joystickBaseProps={{
-              style: {
-                  // Use FILTER to hide the rainbow colors safely
-                  filter: 'grayscale(100%) brightness(40%)', 
-                  
-                  // Use SCALE to resize (keeps the math working!)
-                  transform: 'scale(1.5)',
-                  transformOrigin: 'bottom left', // Grow from the corner
-                  
-                  position: 'absolute',
-                  bottom: '40px',
-                  left: '40px',
-                  zIndex: 99999, // Force to front
-                  borderRadius: '50%',
-              }
+      {/* 1. MOVE JOYSTICK (Left) */}
+      <div style={{ position: 'absolute', bottom: 40, left: 40, zIndex: 99999 }}>
+        <Joystick 
+          size={100} 
+          sticky={false} 
+          baseColor="rgba(40, 40, 40, 0.8)" 
+          stickColor="white" 
+          move={(e) => {
+            // --- FIX #1: THE ROTATION FIX ---
+            const distance = Math.min(Math.sqrt(Math.pow(e.x, 2) + Math.pow(e.y, 2)), 1);
+            
+            // We removed the "- Math.PI / 2". 
+            // Now: Up (y=1) -> 90 degrees (Forward).
+            const angle = Math.atan2(e.y, e.x);
+            
+            setJoystick(distance, angle, true);
           }}
-          joystickStickProps={{
-              style: {
-                  backgroundColor: 'white',
-                  borderRadius: '50%',
-                  border: '2px solid black',
-                  // Keep the stick bright
-                  filter: 'brightness(150%) contrast(150%)', 
-              }
+          stop={() => {
+            setJoystick(0, 0, false)
           }}
-          
-          // 2. Jump Button (Right)
-          buttonLargeBaseProps={{
-              style: {
-                  filter: 'grayscale(100%) brightness(40%)', 
-                  transform: 'scale(1.5)',
-                  transformOrigin: 'bottom right',
-                  
-                  position: 'absolute',
-                  bottom: '40px',
-                  right: '40px',
-                  zIndex: 99999,
-                  borderRadius: '50%',
-              }
-          }}
-          buttonNumber={1} 
-      />
+        />
+      </div>
+{/* 2. JUMP BUTTON (Right) - FAKE SPACEBAR MODE */}
+      <div 
+        style={{ 
+            position: 'absolute', bottom: 60, right: 60, zIndex: 99999,
+            width: 80, height: 80, borderRadius: '50%',
+            backgroundColor: 'rgba(200, 50, 50, 0.8)', border: '4px solid white',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            userSelect: 'none', cursor: 'pointer', 
+            touchAction: 'none' // Prevents scroll/zoom interference
+        }}
+        // --- THE MAGIC FIX ---
+        onPointerDown={(e) => {
+            e.target.setPointerCapture(e.pointerId); // Lock finger
+            triggerJump(); // Press Spacebar
+            
+            // SAFETY PULSE: Release automatically after 100ms
+            // This guarantees the jump stops even if the browser freezes.
+            setTimeout(() => releaseJump(), 100);
+        }}
+        onPointerUp={(e) => {
+            e.target.releasePointerCapture(e.pointerId);
+            releaseJump(); // Release Spacebar
+        }}
+        onPointerLeave={() => releaseJump()} // Backup release
+      >
+        <span style={{color: 'white', fontWeight: 'bold', pointerEvents: 'none'}}>JUMP</span>
+      </div>
+
       
       {/* --- THE HTML MENU OVERLAY --- */}
       {/* Only show this div if character is null */}

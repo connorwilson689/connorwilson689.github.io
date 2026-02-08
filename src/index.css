@@ -9,3 +9,39 @@ html, body, #root {
   height: 100%;
   overflow: hidden; /* Prevents scrollbars */
 }
+
+
+
+/* --- ECCTRL JOYSTICK FINAL FIX (Targeting Nipple.js internals) --- */
+
+/* 1. The BASE (The Back Circle) */
+/* Nipple.js calls this ".back" */
+div[id*="ecctrl"] .back {
+  background-image: none !important;          /* KILL RAINBOW */
+  background-color: rgba(40, 40, 40, 0.8) !important; /* Dark Grey */
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
+  border-radius: 50% !important;
+}
+
+/* 2. The STICK (The Front Circle) */
+/* Nipple.js calls this ".front" */
+div[id*="ecctrl"] .front {
+  background-image: none !important;          /* KILL RAINBOW */
+  background-color: white !important;         /* Pure White */
+  border: 2px solid black !important;
+  box-shadow: none !important;
+  border-radius: 50% !important;
+}
+
+/* 3. The JUMP BUTTON */
+div[id*="ecctrl-button"] {
+    background-image: none !important;
+    background-color: rgba(200, 50, 50, 0.8) !important;
+    border: 4px solid white !important;
+    border-radius: 50% !important;
+}
+/* Kill rainbow inside jump button if it exists */
+div[id*="ecctrl-button"] > div {
+    background-image: none !important;
+}
