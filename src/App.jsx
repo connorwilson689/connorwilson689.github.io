@@ -30,6 +30,30 @@ function App() {
   const setJoystick = useJoystickControls((state) => state.setJoystick)
   const pressButton1 = useJoystickControls((state) => state.pressButton1)
   const releaseButton1 = useJoystickControls((state) => state.releaseButton1)
+
+  //RESOLUTION LOCK
+  const [dpr, setDpr] = useState(1); // State to hold our calculated resolution
+
+  useEffect(() => {
+    const updateResolution = () => {
+      // 1. Choose your "Retro" width. (500 is roughly what your desktop was doing at 0.25)
+      // Lower number = chunkier pixels. Higher number = smoother.
+      const targetWidth = 300; 
+      
+      // 2. Calculate the ratio needed to force the screen to render at targetWidth
+      let calculatedDpr = targetWidth / window.innerWidth;
+      
+      // 3. Prevent it from rendering higher than the device's actual limits
+      calculatedDpr = Math.min(calculatedDpr, window.devicePixelRatio || 1);
+      
+      setDpr(calculatedDpr);
+    };
+
+    updateResolution(); // Run on startup
+    window.addEventListener('resize', updateResolution); // Run if they turn their phone sideways
+    return () => window.removeEventListener('resize', updateResolution);
+  }, []);
+
   const triggerJump = () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', key: ' ', bubbles: true }));
   };
@@ -218,7 +242,7 @@ function App() {
 
       {/* --- THE 3D WORLD --- */}
       <Canvas
-        dpr={.25} // Performance fix for your Surface
+        dpr={dpr}
         shadows
         camera={{ position: [0, 5, 10], fov: 50 }}
         //pixelated added to keep it from bluring
