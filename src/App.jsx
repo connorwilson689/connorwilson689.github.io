@@ -38,7 +38,7 @@ function App() {
     const updateResolution = () => {
       // 1. Choose your "Retro" width. (500 is roughly what your desktop was doing at 0.25)
       // Lower number = chunkier pixels. Higher number = smoother.
-      const targetWidth = 300; 
+      const targetWidth = 400; 
       
       // 2. Calculate the ratio needed to force the screen to render at targetWidth
       let calculatedDpr = targetWidth / window.innerWidth;
