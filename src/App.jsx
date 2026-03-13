@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { Physics } from '@react-three/rapier';
 import { KeyboardControls, Sky, Stars, Cloud } from '@react-three/drei';
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import Experience from './Experience';
 import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
@@ -35,6 +35,11 @@ function App() {
   const [showFallMessage, setShowFallMessage] = useState(false);
   const [loopingThoughts, setLoopingThoughts] = useState([]);
 
+  const thoughtMessages = useMemo(() => ([
+    'where was I going again?',
+    'I can balance a lot of snowglobes on my nose'
+  ]), [])
+
   useEffect(() => {
     const updateResolution = () => {
       // 1. Choose your "Retro" width. (500 is roughly what your desktop was doing at 0.25)
@@ -56,18 +61,23 @@ function App() {
   }, []);
 
   useEffect(() => {
+    let thoughtIndex = 0
+
     const interval = window.setInterval(() => {
+      const nextThought = thoughtMessages[thoughtIndex % thoughtMessages.length]
+      thoughtIndex += 1
+
       setLoopingThoughts((current) => ([
         ...current,
         {
           id: `${Date.now()}-${Math.random()}`,
-          text: 'where was I going again? what was I doing? followed by I can balance a lot of snowglobes on my nose'
+          text: nextThought
         }
       ].slice(-6)))
     }, 60000)
 
     return () => window.clearInterval(interval)
-  }, [])
+  }, [thoughtMessages])
 
   const triggerJump = () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', key: ' ', bubbles: true }));
@@ -299,10 +309,12 @@ function App() {
       {/* --- THE 3D WORLD --- */}
       <Canvas
         dpr={dpr}
+        gl={{ antialias: false, powerPreference: 'high-performance' }}
         shadows
         camera={{ position: [0, 5, 10], fov: 50 }}
+        className="retro-canvas"
         //pixelated added to keep it from bluring
-        style={{ height: '100vh', background: '#ececec', imageRendering: 'pixelated'}}
+        style={{ height: '100vh', background: '#ececec', imageRendering: 'pixelated' }}
       >
         <color attach="background" args={["#9ed4ff"]} />
         <fog attach="fog" args={["#b7dcff", 28, 140]} />
