@@ -154,6 +154,70 @@ function PropFrog({ position, rotation = [0, 0, 0], scale = 0.5 }) {
   )
 }
 
+
+function FlyingWingBike({ center = [0, 22, 0], radius = 90, speed = 0.2, phase = 0, altitudeWave = 3, scale = 0.55 }) {
+  const { nodes, materials } = useGLTF('./bicycle.glb')
+  const bikeRef = useRef()
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime * speed + phase
+    const x = center[0] + Math.cos(t) * radius
+    const z = center[2] + Math.sin(t) * radius
+    const y = center[1] + Math.sin(t * 2.4) * altitudeWave
+
+    if (bikeRef.current) {
+      bikeRef.current.position.set(x, y, z)
+      bikeRef.current.rotation.set(0.08 * Math.sin(t * 2), -t + Math.PI * 0.5, 0.12 * Math.cos(t * 1.7))
+    }
+  })
+
+  return (
+    <group ref={bikeRef} scale={scale}>
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes['FullBike_-_Frame-1'].geometry}
+        position={nodes['FullBike_-_Frame-1'].position}
+        rotation={nodes['FullBike_-_Frame-1'].rotation}
+        material={materials.BikeFrameMat || materials.Material}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes['FullBike_-_Wheel-1'].geometry}
+        position={nodes['FullBike_-_Wheel-1'].position}
+        rotation={nodes['FullBike_-_Wheel-1'].rotation}
+        material={materials.BikeTire || materials.Material}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes['FullBike_-_Wheel-2'].geometry}
+        position={nodes['FullBike_-_Wheel-2'].position}
+        rotation={nodes['FullBike_-_Wheel-2'].rotation}
+        material={materials.BikeTire || materials.Material}
+      />
+
+      <mesh castShadow receiveShadow position={[0, 1.5, -0.1]}>
+        <boxGeometry args={[8.5, 0.2, 1.8]} />
+        <meshStandardMaterial color="#e6e7ef" metalness={0.35} roughness={0.28} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, 1.5, 0.9]}>
+        <boxGeometry args={[3.2, 0.16, 1.1]} />
+        <meshStandardMaterial color="#f0f2ff" metalness={0.3} roughness={0.25} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[-0.6, 1.2, -2.3]} rotation={[0.2, 0, 0]}>
+        <boxGeometry args={[0.45, 1.1, 3.9]} />
+        <meshStandardMaterial color="#ffb6c7" emissive="#913146" emissiveIntensity={0.3} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0.6, 1.2, -2.3]} rotation={[0.2, 0, 0]}>
+        <boxGeometry args={[0.45, 1.1, 3.9]} />
+        <meshStandardMaterial color="#ffb6c7" emissive="#913146" emissiveIntensity={0.3} />
+      </mesh>
+    </group>
+  )
+}
+
 function TrailerHome({ position = [0, 0, 0], bodyColor = '#d6d2c7', trimColor = '#8b8a85' }) {
   return (
     <RigidBody type="fixed" colliders="cuboid">
@@ -232,16 +296,24 @@ function GuitarProp({ position, rotation = [0, 0, 0], scale = 1 }) {
 function PCBSection() {
   const traceLines = useMemo(() => {
     const lines = []
-    for (let i = 0; i < 18; i += 1) {
+    for (let i = 0; i < 36; i += 1) {
       lines.push({
         id: `h-trace-${i}`,
-        position: [-190 + (i % 6) * 26, -0.46, -64 + Math.floor(i / 6) * 26],
-        size: [16, 0.06, 1.2]
+        position: [-236 + (i % 9) * 10.5, -0.46, -80 + Math.floor(i / 9) * 14],
+        size: [8.6, 0.06, 0.8]
       })
       lines.push({
         id: `v-trace-${i}`,
-        position: [-198 + (i % 6) * 26, -0.46, -56 + Math.floor(i / 6) * 26],
-        size: [1.2, 0.06, 16]
+        position: [-240 + (i % 9) * 10.5, -0.46, -74 + Math.floor(i / 9) * 14],
+        size: [0.8, 0.06, 8.6]
+      })
+    }
+    for (let i = 0; i < 20; i += 1) {
+      lines.push({
+        id: `diag-${i}`,
+        position: [-232 + (i % 5) * 18, -0.46, -76 + Math.floor(i / 5) * 16],
+        size: [6, 0.06, 0.7],
+        rotation: [0, Math.PI * 0.25, 0]
       })
     }
     return lines
@@ -249,16 +321,35 @@ function PCBSection() {
 
   const components = useMemo(() => {
     const chips = []
-    for (let i = 0; i < 22; i += 1) {
+    for (let i = 0; i < 30; i += 1) {
       chips.push({
         id: `chip-${i}`,
-        position: [-210 + (i % 6) * 14, 0.2, -70 + Math.floor(i / 6) * 18],
-        scale: 0.8 + (i % 4) * 0.2,
+        position: [-230 + (i % 6) * 14, 0.2, -78 + Math.floor(i / 6) * 15],
+        scale: 0.7 + (i % 4) * 0.18,
         rot: ((i * 35) % 360) * (Math.PI / 180)
       })
     }
     return chips
   }, [])
+
+  const vias = useMemo(() => {
+    const points = []
+    for (let i = 0; i < 70; i += 1) {
+      points.push({
+        id: `via-${i}`,
+        position: [-243 + (i % 14) * 7, -0.43, -84 + Math.floor(i / 14) * 13]
+      })
+    }
+    return points
+  }, [])
+
+  const resistors = useMemo(() => (
+    Array.from({ length: 18 }, (_, i) => ({
+      id: `resistor-${i}`,
+      position: [-238 + (i % 6) * 15.5, 0.2, -81 + Math.floor(i / 6) * 20],
+      rotation: [0, (i % 2 === 0 ? Math.PI * 0.5 : 0), 0]
+    }))
+  ), [])
 
   const capacitorTowers = useMemo(() => (
     [
@@ -279,11 +370,27 @@ function PCBSection() {
         </mesh>
       </RigidBody>
 
+      <RigidBody type="fixed" colliders="cuboid">
+        <mesh position={[-196, -0.5, -40]} receiveShadow>
+          <boxGeometry args={[104, 0.11, 104]} />
+          <meshStandardMaterial color="#0a5736" />
+        </mesh>
+      </RigidBody>
+
       {traceLines.map((trace) => (
         <RigidBody key={trace.id} type="fixed" colliders="cuboid">
-          <mesh position={trace.position} receiveShadow>
+          <mesh position={trace.position} rotation={trace.rotation || [0, 0, 0]} receiveShadow>
             <boxGeometry args={trace.size} />
             <meshStandardMaterial color="#d9af41" emissive="#7f5f00" emissiveIntensity={0.3} />
+          </mesh>
+        </RigidBody>
+      ))}
+
+      {vias.map((via) => (
+        <RigidBody key={via.id} type="fixed" colliders="ball">
+          <mesh position={via.position} receiveShadow>
+            <cylinderGeometry args={[0.44, 0.44, 0.18, 14]} />
+            <meshStandardMaterial color="#d7b56d" emissive="#5f4307" emissiveIntensity={0.2} />
           </mesh>
         </RigidBody>
       ))}
@@ -325,6 +432,25 @@ function PCBSection() {
             <mesh castShadow position={[0, tower.height + 0.35, 0]}>
               <cylinderGeometry args={[1.45, 1.45, 0.5, 20]} />
               <meshStandardMaterial color="#84d3ff" emissive="#2b88aa" emissiveIntensity={0.4} />
+            </mesh>
+          </group>
+        </RigidBody>
+      ))}
+
+      {resistors.map((resistor) => (
+        <RigidBody key={resistor.id} type="fixed" colliders="cuboid">
+          <group position={resistor.position} rotation={resistor.rotation}>
+            <mesh castShadow receiveShadow position={[0, 0.35, 0]}>
+              <boxGeometry args={[2.7, 0.55, 1.1]} />
+              <meshStandardMaterial color="#c7c1ad" />
+            </mesh>
+            <mesh castShadow position={[-1.65, 0.26, 0]}>
+              <boxGeometry args={[0.95, 0.18, 0.3]} />
+              <meshStandardMaterial color="#bbb" />
+            </mesh>
+            <mesh castShadow position={[1.65, 0.26, 0]}>
+              <boxGeometry args={[0.95, 0.18, 0.3]} />
+              <meshStandardMaterial color="#bbb" />
             </mesh>
           </group>
         </RigidBody>
@@ -413,13 +539,35 @@ function TownLayout() {
     ]
   ), [])
 
-  const stairSteps = useMemo(() => Array.from({ length: 26 }, (_, i) => ({
+  const stairSteps = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
     id: `step-${i}`,
-    position: [46 + i * 2.8, -0.3 + i * 1.35, -60],
-    width: 2.4,
-    height: 0.75,
+    position: [46 + i * 4.5, -0.3 + i * 2.45, -60],
+    width: 2.8,
+    height: 0.9,
     depth: 5.8
   })), [])
+
+  const staircaseLanding = useMemo(() => ([
+    { id: 'landing-1', position: [109, 33.7, -60], size: [9, 1.2, 7] },
+    { id: 'landing-2', position: [116, 35.6, -60], size: [9, 1.2, 7] },
+    { id: 'landing-3', position: [123, 37.2, -60], size: [10, 1.2, 7] }
+  ]), [])
+
+  const edgeGiants = useMemo(() => (
+    [
+      { id: 'giant-1', position: [-86, -0.5, -78], height: 30, color: '#1b1725', lean: 0.15 },
+      { id: 'giant-2', position: [90, -0.5, -80], height: 34, color: '#211327', lean: -0.2 },
+      { id: 'giant-3', position: [96, -0.5, 82], height: 28, color: '#2a1c30', lean: 0.1 },
+      { id: 'giant-4', position: [-94, -0.5, 80], height: 36, color: '#171226', lean: -0.15 }
+    ]
+  ), [])
+
+  const skyWingBikes = useMemo(() => (
+    [
+      { id: 'sky-bike-1', center: [0, 30, -6], radius: 120, speed: 0.14, phase: 0.2, altitudeWave: 4.2, scale: 0.72 },
+      { id: 'sky-bike-2', center: [10, 36, 8], radius: 96, speed: 0.18, phase: Math.PI, altitudeWave: 3.5, scale: 0.66 }
+    ]
+  ), [])
 
   return (
     <>
@@ -492,6 +640,15 @@ function TownLayout() {
         </RigidBody>
       ))}
 
+      {staircaseLanding.map((platform) => (
+        <RigidBody key={platform.id} type="fixed" colliders="cuboid">
+          <mesh position={platform.position} castShadow receiveShadow>
+            <boxGeometry args={platform.size} />
+            <meshStandardMaterial color="#d7dbe2" />
+          </mesh>
+        </RigidBody>
+      ))}
+
       <RigidBody type="fixed" colliders="cuboid">
         <mesh position={[126, 37, -60]} castShadow receiveShadow>
           <boxGeometry args={[40, 2, 20]} />
@@ -542,6 +699,41 @@ function TownLayout() {
           position={frog.position}
           rotation={frog.rotation}
           scale={frog.scale}
+        />
+      ))}
+
+      {edgeGiants.map((giant) => (
+        <RigidBody key={giant.id} type="fixed" colliders="cuboid">
+          <group position={giant.position} rotation={[0, giant.lean, 0]}>
+            <mesh castShadow receiveShadow position={[0, giant.height * 0.52, 0]}>
+              <cylinderGeometry args={[2.1, 2.8, giant.height, 14]} />
+              <meshStandardMaterial color={giant.color} roughness={0.9} metalness={0.1} />
+            </mesh>
+            <mesh castShadow position={[0, giant.height + 3.4, 0.5]}>
+              <sphereGeometry args={[4.4, 16, 16]} />
+              <meshStandardMaterial color="#2e2137" emissive="#3d224f" emissiveIntensity={0.32} />
+            </mesh>
+            <mesh castShadow position={[-2.1, giant.height + 3.8, 3.2]}>
+              <sphereGeometry args={[1, 12, 12]} />
+              <meshStandardMaterial color="#dc3b48" emissive="#aa1623" emissiveIntensity={0.6} />
+            </mesh>
+            <mesh castShadow position={[2.1, giant.height + 3.8, 3.2]}>
+              <sphereGeometry args={[1, 12, 12]} />
+              <meshStandardMaterial color="#dc3b48" emissive="#aa1623" emissiveIntensity={0.6} />
+            </mesh>
+          </group>
+        </RigidBody>
+      ))}
+
+      {skyWingBikes.map((bike) => (
+        <FlyingWingBike
+          key={bike.id}
+          center={bike.center}
+          radius={bike.radius}
+          speed={bike.speed}
+          phase={bike.phase}
+          altitudeWave={bike.altitudeWave}
+          scale={bike.scale}
         />
       ))}
     </>

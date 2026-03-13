@@ -33,6 +33,7 @@ function App() {
   //RESOLUTION LOCK
   const [dpr, setDpr] = useState(1); // State to hold our calculated resolution
   const [showFallMessage, setShowFallMessage] = useState(false);
+  const [loopingThoughts, setLoopingThoughts] = useState([]);
 
   useEffect(() => {
     const updateResolution = () => {
@@ -53,6 +54,20 @@ function App() {
     window.addEventListener('resize', updateResolution); // Run if they turn their phone sideways
     return () => window.removeEventListener('resize', updateResolution);
   }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setLoopingThoughts((current) => ([
+        ...current,
+        {
+          id: `${Date.now()}-${Math.random()}`,
+          text: 'where was I going again? what was I doing? followed by I can balance a lot of snowglobes on my nose'
+        }
+      ].slice(-6)))
+    }, 60000)
+
+    return () => window.clearInterval(interval)
+  }, [])
 
   const triggerJump = () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', key: ' ', bubbles: true }));
@@ -139,6 +154,27 @@ function App() {
       </div>
 
       
+      <div
+        style={{
+          position: 'absolute',
+          top: 16,
+          left: 16,
+          zIndex: 9998,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4,
+          pointerEvents: 'none',
+          color: '#131313',
+          fontSize: '10px',
+          opacity: 0.7,
+          maxWidth: '320px'
+        }}
+      >
+        {loopingThoughts.map((thought) => (
+          <span key={thought.id}>{thought.text}</span>
+        ))}
+      </div>
+
       {/* --- THE HTML MENU OVERLAY --- */}
       {/* Only show this div if character is null */}
       {!character && (
