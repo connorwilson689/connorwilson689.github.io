@@ -167,7 +167,7 @@ function FlyingWingBike({ center = [0, 22, 0], radius = 90, speed = 0.2, phase =
 
     if (bikeRef.current) {
       bikeRef.current.position.set(x, y, z)
-      bikeRef.current.rotation.set(0.08 * Math.sin(t * 2), -t + Math.PI * 0.5, 0.12 * Math.cos(t * 1.7))
+      bikeRef.current.rotation.set(0.08 * Math.sin(t * 2), -t, 0.12 * Math.cos(t * 1.7))
     }
   })
 
@@ -452,6 +452,45 @@ function PCBSection() {
               <boxGeometry args={[0.95, 0.18, 0.3]} />
               <meshStandardMaterial color="#bbb" />
             </mesh>
+          </group>
+        </RigidBody>
+      ))}
+
+      {Array.from({ length: 24 }, (_, i) => ({
+        id: `micro-led-${i}`,
+        position: [-241 + (i % 8) * 12.7, 0.18, -86 + Math.floor(i / 8) * 18]
+      })).map((led) => (
+        <RigidBody key={led.id} type="fixed" colliders="cuboid">
+          <group position={led.position}>
+            <mesh castShadow receiveShadow position={[0, 0.32, 0]}>
+              <boxGeometry args={[1.35, 0.42, 1.35]} />
+              <meshStandardMaterial color="#2a2f39" />
+            </mesh>
+            <mesh castShadow position={[0, 0.64, 0]}>
+              <boxGeometry args={[0.65, 0.2, 0.65]} />
+              <meshStandardMaterial color="#8ff9ff" emissive="#48c4d4" emissiveIntensity={0.75} />
+            </mesh>
+          </group>
+        </RigidBody>
+      ))}
+
+      {Array.from({ length: 12 }, (_, i) => ({
+        id: `coil-${i}`,
+        position: [-236 + (i % 6) * 16.8, 0.15, -12 + Math.floor(i / 6) * 20],
+        rot: i % 2 === 0 ? 0 : Math.PI * 0.5
+      })).map((coil) => (
+        <RigidBody key={coil.id} type="fixed" colliders="cuboid">
+          <group position={coil.position} rotation={[0, coil.rot, 0]}>
+            <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
+              <boxGeometry args={[4.2, 1, 2.1]} />
+              <meshStandardMaterial color="#232833" />
+            </mesh>
+            {[-1.25, -0.42, 0.42, 1.25].map((windX) => (
+              <mesh key={`${coil.id}-wind-${windX}`} castShadow position={[windX, 0.7, 0]}>
+                <torusGeometry args={[0.24, 0.08, 10, 24]} />
+                <meshStandardMaterial color="#cf8f23" emissive="#7a4700" emissiveIntensity={0.28} />
+              </mesh>
+            ))}
           </group>
         </RigidBody>
       ))}
