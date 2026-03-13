@@ -28,11 +28,11 @@ function App() {
   const [character, setCharacter] = useState(null);
   
   const setJoystick = useJoystickControls((state) => state.setJoystick)
-  const pressButton1 = useJoystickControls((state) => state.pressButton1)
   const releaseButton1 = useJoystickControls((state) => state.releaseButton1)
 
   //RESOLUTION LOCK
   const [dpr, setDpr] = useState(1); // State to hold our calculated resolution
+  const [showFallMessage, setShowFallMessage] = useState(false);
 
   useEffect(() => {
     const updateResolution = () => {
@@ -240,6 +240,26 @@ function App() {
         </div>
       )}
 
+      {showFallMessage && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '8%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            padding: '12px 16px',
+            borderRadius: '10px',
+            background: 'rgba(18, 18, 18, 0.75)',
+            color: '#fff',
+            fontStyle: 'italic',
+            letterSpacing: '0.4px'
+          }}
+        >
+          some things just happen, without explaination...
+        </div>
+      )}
+
       {/* --- THE 3D WORLD --- */}
       <Canvas
         dpr={dpr}
@@ -265,7 +285,10 @@ function App() {
             {/* Pass the chosen character down to Experience */}
             {/* If char is null, we pass 'frog' as default just to prevent crash, 
                 but the menu covers it anyway. */}
-            <Experience activeCharacter={character || 'frog'} />
+            <Experience
+              activeCharacter={character || 'frog'}
+              onFallStateChange={setShowFallMessage}
+            />
           </Suspense>
         </Physics>
       </Canvas>
