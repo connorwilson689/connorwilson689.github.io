@@ -218,6 +218,91 @@ function FlyingWingBike({ center = [0, 22, 0], radius = 90, speed = 0.2, phase =
   )
 }
 
+
+
+function FrogBlimp({ center = [0, 54, 0], radius = 150, speed = 0.09, phase = 0, altitudeWave = 4.5, scale = 3.6, spinSpeed = 1.2 }) {
+  const { nodes: frogNodes, materials: frogMaterials } = useGLTF('./frog.glb')
+  const { nodes: bikeNodes, materials: bikeMaterials } = useGLTF('./bicycle.glb')
+  const blimpRef = useRef()
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime * speed + phase
+    const x = center[0] + Math.cos(t) * radius
+    const z = center[2] + Math.sin(t) * radius
+    const y = center[1] + Math.sin(t * 1.6) * altitudeWave
+
+    if (blimpRef.current) {
+      blimpRef.current.position.set(x, y, z)
+      blimpRef.current.rotation.set(0.06 * Math.sin(t * 1.8), -t, state.clock.elapsedTime * spinSpeed)
+    }
+  })
+
+  return (
+    <group ref={blimpRef}>
+      <group scale={scale} rotation={[0, Math.PI * 0.5, Math.PI * 0.5]}>
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={frogNodes.Body.geometry}
+          position={frogNodes.Body.position}
+          rotation={frogNodes.Body.rotation}
+          material={frogMaterials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })}
+        />
+        <mesh
+          castShadow
+          receiveShadow
+          geometry={frogNodes.Jaw.geometry}
+          position={frogNodes.Jaw.position}
+          rotation={frogNodes.Jaw.rotation}
+          material={frogMaterials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })}
+        />
+      </group>
+
+      <group position={[0, -6.2, 0]} scale={0.95}>
+        <mesh castShadow receiveShadow position={[0, 2.2, 0]}>
+          <boxGeometry args={[0.1, 4.4, 0.1]} />
+          <meshStandardMaterial color="#d0d3da" />
+        </mesh>
+        <mesh castShadow receiveShadow position={[-1.4, 2.5, 0.85]}>
+          <boxGeometry args={[0.1, 3.8, 0.1]} />
+          <meshStandardMaterial color="#d0d3da" />
+        </mesh>
+        <mesh castShadow receiveShadow position={[1.4, 2.5, 0.85]}>
+          <boxGeometry args={[0.1, 3.8, 0.1]} />
+          <meshStandardMaterial color="#d0d3da" />
+        </mesh>
+
+        <group position={[0, 0.35, 0]} rotation={[0, -Math.PI * 0.5, 0]} scale={1.35}>
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={bikeNodes['FullBike_-_Frame-1'].geometry}
+            position={bikeNodes['FullBike_-_Frame-1'].position}
+            rotation={bikeNodes['FullBike_-_Frame-1'].rotation}
+            material={bikeMaterials.BikeFrameMat || bikeMaterials.Material}
+          />
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={bikeNodes['FullBike_-_Wheel-1'].geometry}
+            position={bikeNodes['FullBike_-_Wheel-1'].position}
+            rotation={bikeNodes['FullBike_-_Wheel-1'].rotation}
+            material={bikeMaterials.BikeTire || bikeMaterials.Material}
+          />
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={bikeNodes['FullBike_-_Wheel-2'].geometry}
+            position={bikeNodes['FullBike_-_Wheel-2'].position}
+            rotation={bikeNodes['FullBike_-_Wheel-2'].rotation}
+            material={bikeMaterials.BikeTire || bikeMaterials.Material}
+          />
+        </group>
+      </group>
+    </group>
+  )
+}
+
 function TrailerHome({ position = [0, 0, 0], bodyColor = '#d6d2c7', trimColor = '#8b8a85' }) {
   return (
     <RigidBody type="fixed" colliders="cuboid">
@@ -608,6 +693,13 @@ function TownLayout() {
     ]
   ), [])
 
+  const frogBlimps = useMemo(() => (
+    [
+      { id: 'frog-blimp-1', center: [0, 55, 10], radius: 165, speed: 0.075, phase: 0, altitudeWave: 5.2, scale: 3.9, spinSpeed: 1.3 },
+      { id: 'frog-blimp-2', center: [0, 62, -6], radius: 138, speed: 0.09, phase: Math.PI, altitudeWave: 4.4, scale: 3.2, spinSpeed: 1.1 }
+    ]
+  ), [])
+
   return (
     <>
       <RigidBody type="fixed" friction={1}>
@@ -773,6 +865,19 @@ function TownLayout() {
           phase={bike.phase}
           altitudeWave={bike.altitudeWave}
           scale={bike.scale}
+        />
+      ))}
+
+      {frogBlimps.map((blimp) => (
+        <FrogBlimp
+          key={blimp.id}
+          center={blimp.center}
+          radius={blimp.radius}
+          speed={blimp.speed}
+          phase={blimp.phase}
+          altitudeWave={blimp.altitudeWave}
+          scale={blimp.scale}
+          spinSpeed={blimp.spinSpeed}
         />
       ))}
     </>
