@@ -154,6 +154,37 @@ function PropFrog({ position, rotation = [0, 0, 0], scale = 0.5 }) {
   )
 }
 
+function GiantSkyFrog({ position = [0, 92, -130], scale = 34 }) {
+  const { nodes, materials } = useGLTF('./frog.glb')
+  const frogMaterial = materials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })
+
+  return (
+    <group position={position} scale={scale} rotation={[Math.PI, -Math.PI * 0.14, 0.08]}>
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Body.geometry}
+        position={nodes.Body.position}
+        rotation={nodes.Body.rotation}
+        material={frogMaterial}
+      />
+      <mesh
+        castShadow
+        receiveShadow
+        geometry={nodes.Jaw.geometry}
+        position={nodes.Jaw.position}
+        rotation={[
+          nodes.Jaw.rotation.x + 0.78,
+          nodes.Jaw.rotation.y,
+          nodes.Jaw.rotation.z
+        ]}
+        material={frogMaterial}
+      />
+      <pointLight position={[0, -3, 2]} intensity={7} color="#ffedbb" distance={90} />
+    </group>
+  )
+}
+
 
 function FlyingWingBike({ center = [0, 22, 0], radius = 90, speed = 0.2, phase = 0, altitudeWave = 3, scale = 0.55 }) {
   const { nodes, materials } = useGLTF('./bicycle.glb')
@@ -528,6 +559,82 @@ function CircuitSkyscraper({ position, height = 18, width = 5, color = '#18212c'
   )
 }
 
+function CircuitBoardTile({ position, rotation = [0, 0, 0], size = [18, 0.16, 14], index = 0 }) {
+  const accentColors = ['#6fffe9', '#8efc64', '#ffd24d', '#74c7ff']
+  const accent = accentColors[index % accentColors.length]
+
+  return (
+    <RigidBody type="fixed" colliders="cuboid">
+      <group position={position} rotation={rotation}>
+        <mesh receiveShadow>
+          <boxGeometry args={size} />
+          <meshStandardMaterial color={index % 2 === 0 ? '#075b3a' : '#06492f'} roughness={0.64} metalness={0.15} />
+        </mesh>
+        {Array.from({ length: 6 }, (_, traceIndex) => (
+          <mesh key={`edge-trace-x-${index}-${traceIndex}`} position={[-6 + traceIndex * 2.4, 0.13, -2.8 + (traceIndex % 3) * 2.8]}>
+            <boxGeometry args={[3.4, 0.08, 0.22]} />
+            <meshStandardMaterial color="#d9af41" emissive="#896500" emissiveIntensity={0.35} />
+          </mesh>
+        ))}
+        {Array.from({ length: 5 }, (_, traceIndex) => (
+          <mesh key={`edge-trace-z-${index}-${traceIndex}`} position={[-5.2 + traceIndex * 2.6, 0.14, 2.6 - (traceIndex % 2) * 5.2]}>
+            <boxGeometry args={[0.22, 0.08, 4.8]} />
+            <meshStandardMaterial color="#d9af41" emissive="#896500" emissiveIntensity={0.35} />
+          </mesh>
+        ))}
+        {Array.from({ length: 4 }, (_, chipIndex) => (
+          <group key={`edge-chip-${index}-${chipIndex}`} position={[-5.6 + chipIndex * 3.7, 0.42, chipIndex % 2 === 0 ? 3.6 : -3.8]} rotation={[0, chipIndex * 0.35, 0]}>
+            <mesh castShadow receiveShadow>
+              <boxGeometry args={[2.1, 0.58, 1.65]} />
+              <meshStandardMaterial color="#171b24" />
+            </mesh>
+            <mesh castShadow position={[0, 0.38, 0]}>
+              <boxGeometry args={[1.15, 0.12, 0.75]} />
+              <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.75} />
+            </mesh>
+          </group>
+        ))}
+        {Array.from({ length: 10 }, (_, viaIndex) => (
+          <mesh key={`edge-via-${index}-${viaIndex}`} position={[-7.5 + viaIndex * 1.65, 0.16, viaIndex % 2 === 0 ? -5.2 : 5.1]}>
+            <cylinderGeometry args={[0.26, 0.26, 0.1, 12]} />
+            <meshStandardMaterial color="#e4c77d" emissive="#725206" emissiveIntensity={0.25} />
+          </mesh>
+        ))}
+      </group>
+    </RigidBody>
+  )
+}
+
+function CircuitBoardBorder() {
+  const borderTiles = useMemo(() => {
+    const tiles = []
+    for (let i = 0; i < 30; i += 1) {
+      const x = -252 + i * 17.4
+      tiles.push({ id: `north-board-${i}`, position: [x, -0.38, -209], rotation: [0, 0, 0], index: i })
+      tiles.push({ id: `south-board-${i}`, position: [x, -0.38, 209], rotation: [0, Math.PI, 0], index: i + 30 })
+    }
+    for (let i = 0; i < 24; i += 1) {
+      const z = -196 + i * 17
+      tiles.push({ id: `west-board-${i}`, position: [-259, -0.37, z], rotation: [0, Math.PI * 0.5, 0], index: i + 60 })
+      tiles.push({ id: `east-board-${i}`, position: [259, -0.37, z], rotation: [0, -Math.PI * 0.5, 0], index: i + 84 })
+    }
+    return tiles
+  }, [])
+
+  return (
+    <>
+      {borderTiles.map((tile) => (
+        <CircuitBoardTile
+          key={tile.id}
+          position={tile.position}
+          rotation={tile.rotation}
+          index={tile.index}
+        />
+      ))}
+    </>
+  )
+}
+
 function GuitarProp({ position, rotation = [0, 0, 0], scale = 1 }) {
   return (
     <RigidBody type="fixed" colliders="cuboid">
@@ -899,9 +1006,11 @@ function TownLayout() {
       <RigidBody type="fixed" friction={1}>
         <mesh position={[0, -1, 0]} receiveShadow>
           <boxGeometry args={[520, 1, 420]} />
-          <meshStandardMaterial color="#5f9d5f" />
+          <meshStandardMaterial color="#3f703f" />
         </mesh>
       </RigidBody>
+
+      <CircuitBoardBorder />
 
       <RigidBody type="fixed" colliders="cuboid">
         <mesh position={[0, -0.48, -48]} receiveShadow>
@@ -1077,6 +1186,8 @@ function TownLayout() {
           spinSpeed={blimp.spinSpeed}
         />
       ))}
+
+      <GiantSkyFrog />
     </>
   )
 }
