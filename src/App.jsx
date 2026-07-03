@@ -360,12 +360,12 @@ function App() {
         <fog attach="fog" args={["#b7dcff", 28, 140]} />
         <ambientLight intensity={0.75} />
         <hemisphereLight args={["#b8e8ff", "#6d8b55", 0.8]} />
-        <directionalLight position={[22, 24, 12]} intensity={1.5} castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
+        <directionalLight position={[22, 24, 12]} intensity={1.5} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
         <Sky distance={450000} sunPosition={[12, 6, 8]} turbidity={6} rayleigh={1.6} mieCoefficient={0.004} mieDirectionalG={0.9} />
-        <Cloud position={[-18, 18, -30]} speed={0.12} opacity={0.5} width={16} depth={4} segments={20} />
-        <Cloud position={[12, 15, -26]} speed={0.08} opacity={0.45} width={13} depth={4} segments={20} />
-        <Cloud position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={20} />
-        <Stars radius={170} depth={40} count={1600} factor={5} saturation={0} fade speed={0.6} />
+        <Cloud position={[-18, 18, -30]} speed={0.12} opacity={0.5} width={16} depth={4} segments={12} />
+        <Cloud position={[12, 15, -26]} speed={0.08} opacity={0.45} width={13} depth={4} segments={12} />
+        <Cloud position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={12} />
+        <Stars radius={170} depth={40} count={900} factor={5} saturation={0} fade speed={0.6} />
         
         {/* use this to see physics boxes: <Physics debug timeStep="vary"> */}
         <Physics timeStep="vary">
