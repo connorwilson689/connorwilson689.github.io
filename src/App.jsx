@@ -32,6 +32,7 @@ function App() {
 
   //RESOLUTION LOCK
   const [dpr, setDpr] = useState(1); // State to hold our calculated resolution
+  const [pixelationWidth, setPixelationWidth] = useState(400);
   const [showFallMessage, setShowFallMessage] = useState(false);
   const [loopingThoughts, setLoopingThoughts] = useState([]);
 
@@ -42,12 +43,9 @@ function App() {
 
   useEffect(() => {
     const updateResolution = () => {
-      // 1. Choose your "Retro" width. (500 is roughly what your desktop was doing at 0.25)
       // Lower number = chunkier pixels. Higher number = smoother.
-      const targetWidth = 400; 
-      
-      // 2. Calculate the ratio needed to force the screen to render at targetWidth
-      let calculatedDpr = targetWidth / window.innerWidth;
+      // The slider updates this target render width in real time.
+      let calculatedDpr = pixelationWidth / window.innerWidth;
       
       // 3. Prevent it from rendering higher than the device's actual limits
       calculatedDpr = Math.min(calculatedDpr, window.devicePixelRatio || 1);
@@ -58,7 +56,7 @@ function App() {
     updateResolution(); // Run on startup
     window.addEventListener('resize', updateResolution); // Run if they turn their phone sideways
     return () => window.removeEventListener('resize', updateResolution);
-  }, []);
+  }, [pixelationWidth]);
 
   useEffect(() => {
     let thoughtIndex = 0
@@ -183,6 +181,48 @@ function App() {
         {loopingThoughts.map((thought) => (
           <span key={thought.id}>{thought.text}</span>
         ))}
+      </div>
+
+
+      <div
+        style={{
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          zIndex: 99999,
+          width: 220,
+          padding: '12px 14px',
+          borderRadius: '12px',
+          background: 'rgba(18, 18, 18, 0.68)',
+          color: 'white',
+          fontSize: '12px',
+          letterSpacing: '0.3px',
+          textAlign: 'left',
+          userSelect: 'none'
+        }}
+      >
+        <label
+          htmlFor="pixelation-slider"
+          style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}
+        >
+          <span>Pixelation</span>
+          <span>{pixelationWidth}px</span>
+        </label>
+        <input
+          id="pixelation-slider"
+          type="range"
+          min="180"
+          max="1200"
+          step="20"
+          value={pixelationWidth}
+          onChange={(event) => setPixelationWidth(Number(event.target.value))}
+          style={{ width: '100%', accentColor: '#9ed4ff' }}
+          aria-label="Adjust screen pixelation"
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, opacity: 0.78 }}>
+          <span>chunky</span>
+          <span>smooth</span>
+        </div>
       </div>
 
       {/* --- THE HTML MENU OVERLAY --- */}
