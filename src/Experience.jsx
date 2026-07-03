@@ -3,7 +3,7 @@ import Ecctrl from 'ecctrl';
 import { useKeyboardControls, useGLTF } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { useRef, useMemo } from 'react'
+import { useEffect, useRef, useMemo, useState } from 'react'
 
 function Frog() {
   const { nodes, materials } = useGLTF('./frog.glb')
@@ -28,7 +28,7 @@ function Frog() {
     <group dispose={null}>
       <mesh
         geometry={nodes.Body.geometry}
-        position={nodes.Body.position}
+          position={nodes.Body.position}
         rotation={nodes.Body.rotation}
         material={materials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })}
       />
@@ -36,7 +36,7 @@ function Frog() {
       <mesh
         ref={jawRef}
         geometry={nodes.Jaw.geometry}
-        position={nodes.Jaw.position}
+          position={nodes.Jaw.position}
         rotation={nodes.Jaw.rotation}
         material={materials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })}
       />
@@ -68,7 +68,7 @@ function Bicycle() {
     <group dispose={null}>
       <mesh
         geometry={nodes['FullBike_-_Frame-1'].geometry}
-        position={nodes['FullBike_-_Frame-1'].position}
+          position={nodes['FullBike_-_Frame-1'].position}
         rotation={nodes['FullBike_-_Frame-1'].rotation}
         material={materials.BikeFrameMat || materials.Material}
       />
@@ -76,7 +76,7 @@ function Bicycle() {
       <mesh
         ref={frontWheel}
         geometry={nodes['FullBike_-_Wheel-1'].geometry}
-        position={nodes['FullBike_-_Wheel-1'].position}
+          position={nodes['FullBike_-_Wheel-1'].position}
         rotation={nodes['FullBike_-_Wheel-1'].rotation}
         material={materials.BikeTire || materials.Material}
       />
@@ -84,7 +84,7 @@ function Bicycle() {
       <mesh
         ref={backWheel}
         geometry={nodes['FullBike_-_Wheel-2'].geometry}
-        position={nodes['FullBike_-_Wheel-2'].position}
+          position={nodes['FullBike_-_Wheel-2'].position}
         rotation={nodes['FullBike_-_Wheel-2'].rotation}
         material={materials.BikeTire || materials.Material}
       />
@@ -102,7 +102,7 @@ function PropBicycle({ position, rotation = [0, 0, 0], scale = 1 }) {
           castShadow
           receiveShadow
           geometry={nodes['FullBike_-_Frame-1'].geometry}
-          position={nodes['FullBike_-_Frame-1'].position}
+            position={nodes['FullBike_-_Frame-1'].position}
           rotation={nodes['FullBike_-_Frame-1'].rotation}
           material={materials.BikeFrameMat || materials.Material}
         />
@@ -110,7 +110,7 @@ function PropBicycle({ position, rotation = [0, 0, 0], scale = 1 }) {
           castShadow
           receiveShadow
           geometry={nodes['FullBike_-_Wheel-1'].geometry}
-          position={nodes['FullBike_-_Wheel-1'].position}
+            position={nodes['FullBike_-_Wheel-1'].position}
           rotation={nodes['FullBike_-_Wheel-1'].rotation}
           material={materials.BikeTire || materials.Material}
         />
@@ -118,7 +118,7 @@ function PropBicycle({ position, rotation = [0, 0, 0], scale = 1 }) {
           castShadow
           receiveShadow
           geometry={nodes['FullBike_-_Wheel-2'].geometry}
-          position={nodes['FullBike_-_Wheel-2'].position}
+            position={nodes['FullBike_-_Wheel-2'].position}
           rotation={nodes['FullBike_-_Wheel-2'].rotation}
           material={materials.BikeTire || materials.Material}
         />
@@ -137,7 +137,7 @@ function PropFrog({ position, rotation = [0, 0, 0], scale = 0.5 }) {
           castShadow
           receiveShadow
           geometry={nodes.Body.geometry}
-          position={nodes.Body.position}
+            position={nodes.Body.position}
           rotation={nodes.Body.rotation}
           material={materials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })}
         />
@@ -145,7 +145,7 @@ function PropFrog({ position, rotation = [0, 0, 0], scale = 0.5 }) {
           castShadow
           receiveShadow
           geometry={nodes.Jaw.geometry}
-          position={nodes.Jaw.position}
+            position={nodes.Jaw.position}
           rotation={nodes.Jaw.rotation}
           material={materials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })}
         />
@@ -164,7 +164,7 @@ function GiantSkyFrog({ position = [0, 92, -130], scale = 34 }) {
         castShadow
         receiveShadow
         geometry={nodes.Body.geometry}
-        position={nodes.Body.position}
+          position={nodes.Body.position}
         rotation={nodes.Body.rotation}
         material={frogMaterial}
       />
@@ -172,7 +172,7 @@ function GiantSkyFrog({ position = [0, 92, -130], scale = 34 }) {
         castShadow
         receiveShadow
         geometry={nodes.Jaw.geometry}
-        position={nodes.Jaw.position}
+          position={nodes.Jaw.position}
         rotation={[
           nodes.Jaw.rotation.x + 0.78,
           nodes.Jaw.rotation.y,
@@ -208,7 +208,7 @@ function FlyingWingBike({ center = [0, 22, 0], radius = 90, speed = 0.2, phase =
         castShadow
         receiveShadow
         geometry={nodes['FullBike_-_Frame-1'].geometry}
-        position={nodes['FullBike_-_Frame-1'].position}
+          position={nodes['FullBike_-_Frame-1'].position}
         rotation={nodes['FullBike_-_Frame-1'].rotation}
         material={materials.BikeFrameMat || materials.Material}
       />
@@ -216,7 +216,7 @@ function FlyingWingBike({ center = [0, 22, 0], radius = 90, speed = 0.2, phase =
         castShadow
         receiveShadow
         geometry={nodes['FullBike_-_Wheel-1'].geometry}
-        position={nodes['FullBike_-_Wheel-1'].position}
+          position={nodes['FullBike_-_Wheel-1'].position}
         rotation={nodes['FullBike_-_Wheel-1'].rotation}
         material={materials.BikeTire || materials.Material}
       />
@@ -224,7 +224,7 @@ function FlyingWingBike({ center = [0, 22, 0], radius = 90, speed = 0.2, phase =
         castShadow
         receiveShadow
         geometry={nodes['FullBike_-_Wheel-2'].geometry}
-        position={nodes['FullBike_-_Wheel-2'].position}
+          position={nodes['FullBike_-_Wheel-2'].position}
         rotation={nodes['FullBike_-_Wheel-2'].rotation}
         material={materials.BikeTire || materials.Material}
       />
@@ -275,7 +275,7 @@ function FrogBlimp({ center = [0, 54, 0], radius = 150, speed = 0.09, phase = 0,
           castShadow
           receiveShadow
           geometry={frogNodes.Body.geometry}
-          position={frogNodes.Body.position}
+            position={frogNodes.Body.position}
           rotation={frogNodes.Body.rotation}
           material={frogMaterials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })}
         />
@@ -283,7 +283,7 @@ function FrogBlimp({ center = [0, 54, 0], radius = 150, speed = 0.09, phase = 0,
           castShadow
           receiveShadow
           geometry={frogNodes.Jaw.geometry}
-          position={frogNodes.Jaw.position}
+            position={frogNodes.Jaw.position}
           rotation={frogNodes.Jaw.rotation}
           material={frogMaterials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })}
         />
@@ -308,7 +308,7 @@ function FrogBlimp({ center = [0, 54, 0], radius = 150, speed = 0.09, phase = 0,
             castShadow
             receiveShadow
             geometry={bikeNodes['FullBike_-_Frame-1'].geometry}
-            position={bikeNodes['FullBike_-_Frame-1'].position}
+              position={bikeNodes['FullBike_-_Frame-1'].position}
             rotation={bikeNodes['FullBike_-_Frame-1'].rotation}
             material={bikeMaterials.BikeFrameMat || bikeMaterials.Material}
           />
@@ -316,7 +316,7 @@ function FrogBlimp({ center = [0, 54, 0], radius = 150, speed = 0.09, phase = 0,
             castShadow
             receiveShadow
             geometry={bikeNodes['FullBike_-_Wheel-1'].geometry}
-            position={bikeNodes['FullBike_-_Wheel-1'].position}
+              position={bikeNodes['FullBike_-_Wheel-1'].position}
             rotation={bikeNodes['FullBike_-_Wheel-1'].rotation}
             material={bikeMaterials.BikeTire || bikeMaterials.Material}
           />
@@ -324,7 +324,7 @@ function FrogBlimp({ center = [0, 54, 0], radius = 150, speed = 0.09, phase = 0,
             castShadow
             receiveShadow
             geometry={bikeNodes['FullBike_-_Wheel-2'].geometry}
-            position={bikeNodes['FullBike_-_Wheel-2'].position}
+              position={bikeNodes['FullBike_-_Wheel-2'].position}
             rotation={bikeNodes['FullBike_-_Wheel-2'].rotation}
             material={bikeMaterials.BikeTire || bikeMaterials.Material}
           />
@@ -626,7 +626,7 @@ function CircuitBoardBorder() {
       {borderTiles.map((tile) => (
         <CircuitBoardTile
           key={tile.id}
-          position={tile.position}
+            position={tile.position}
           rotation={tile.rotation}
           index={tile.index}
         />
@@ -800,7 +800,7 @@ function PCBSection() {
       {circuitSkyscrapers.map((tower) => (
         <CircuitSkyscraper
           key={tower.id}
-          position={tower.position}
+            position={tower.position}
           height={tower.height}
           width={tower.width}
           color={tower.color}
@@ -1046,7 +1046,7 @@ function TownLayout() {
       {trailerRows.map((trailer) => (
         <TrailerHome
           key={`${trailer.x}-${trailer.z}`}
-          position={[trailer.x, -0.35, trailer.z]}
+            position={[trailer.x, -0.35, trailer.z]}
           bodyColor={trailer.color}
           trimColor={trailer.trim}
         />
@@ -1104,7 +1104,7 @@ function TownLayout() {
       {frontHouseBikes.map((bike) => (
         <PropBicycle
           key={bike.id}
-          position={bike.position}
+            position={bike.position}
           rotation={bike.rotation}
           scale={bike.scale}
         />
@@ -1113,7 +1113,7 @@ function TownLayout() {
       {mapBikes.map((bike) => (
         <PropBicycle
           key={bike.id}
-          position={bike.position}
+            position={bike.position}
           rotation={bike.rotation}
           scale={bike.scale}
         />
@@ -1122,7 +1122,7 @@ function TownLayout() {
       {mapGuitars.map((guitar) => (
         <GuitarProp
           key={guitar.id}
-          position={guitar.position}
+            position={guitar.position}
           rotation={guitar.rotation}
           scale={guitar.scale}
         />
@@ -1133,7 +1133,7 @@ function TownLayout() {
       {frogTree.map((frog) => (
         <PropFrog
           key={frog.id}
-          position={frog.position}
+            position={frog.position}
           rotation={frog.rotation}
           scale={frog.scale}
         />
@@ -1192,15 +1192,50 @@ function TownLayout() {
   )
 }
 
+const CHARACTER_SPAWN_DELAY_MS = 10000
+const CHARACTER_SPAWN_POSITION = [0, 45, 0]
+const FALL_MESSAGE_HEIGHT = -8
+const RESPAWN_HEIGHT = -30
+const RESPAWN_COOLDOWN_SECONDS = 1.5
+
 export default function Experience({ activeCharacter, onFallStateChange }) {
   const { camera } = useThree()
+  const [characterReady, setCharacterReady] = useState(false)
+  const [respawnKey, setRespawnKey] = useState(0)
   const isFallingRef = useRef(false)
+  const lastRespawnTimeRef = useRef(-Infinity)
 
-  useFrame(() => {
-    const falling = camera.position.y < -8
+  useEffect(() => {
+    isFallingRef.current = false
+    lastRespawnTimeRef.current = -Infinity
+    onFallStateChange?.(false)
+
+    if (!activeCharacter) return undefined
+
+    const spawnTimer = window.setTimeout(() => {
+      setCharacterReady(true)
+    }, CHARACTER_SPAWN_DELAY_MS)
+
+    return () => window.clearTimeout(spawnTimer)
+  }, [activeCharacter, onFallStateChange])
+
+  useFrame((state) => {
+    const falling = camera.position.y < FALL_MESSAGE_HEIGHT
     if (falling !== isFallingRef.current) {
       isFallingRef.current = falling
       onFallStateChange?.(falling)
+    }
+
+    if (!characterReady) return
+
+    const shouldRespawn = camera.position.y < RESPAWN_HEIGHT
+      && state.clock.elapsedTime - lastRespawnTimeRef.current > RESPAWN_COOLDOWN_SECONDS
+
+    if (shouldRespawn) {
+      lastRespawnTimeRef.current = state.clock.elapsedTime
+      isFallingRef.current = false
+      onFallStateChange?.(false)
+      setRespawnKey((key) => key + 1)
     }
   })
 
@@ -1225,23 +1260,26 @@ export default function Experience({ activeCharacter, onFallStateChange }) {
 
   return (
     <>
-      <Ecctrl
-        camInitDis={-6}
-        camMaxDis={-7}
-        maxVelLimit={characterStats.speed}
-        jumpVel={characterStats.jump}
-        camTargetPos={{ x: 0, y: 1.2, z: 0 }}
-        camMoveSpeed={1.6}
-        position={[0, 4, 0]}
-        capsuleRadius={characterStats.radius}
-        capsuleHalfHeight={characterStats.height}
-      >
-        <group rotation-y={Math.PI} position={[0, -0.5, 0]}>
-          {(activeCharacter === 'bike' || activeCharacter === 'rolly')
-            ? <Bicycle />
-            : <Frog />}
-        </group>
-      </Ecctrl>
+      {activeCharacter && characterReady && (
+        <Ecctrl
+          key={`${activeCharacter}-${respawnKey}`}
+          camInitDis={-6}
+          camMaxDis={-7}
+          maxVelLimit={characterStats.speed}
+          jumpVel={characterStats.jump}
+          camTargetPos={{ x: 0, y: 1.2, z: 0 }}
+          camMoveSpeed={1.6}
+          position={CHARACTER_SPAWN_POSITION}
+          capsuleRadius={characterStats.radius}
+          capsuleHalfHeight={characterStats.height}
+        >
+          <group rotation-y={Math.PI} position={[0, -0.5, 0]}>
+            {(activeCharacter === 'bike' || activeCharacter === 'rolly')
+              ? <Bicycle />
+              : <Frog />}
+          </group>
+        </Ecctrl>
+      )}
 
       <TownLayout />
     </>
