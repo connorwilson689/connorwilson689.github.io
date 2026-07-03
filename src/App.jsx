@@ -22,6 +22,37 @@ const keyboardMap = [
   { name: 'jump', keys: ['Space'] },
   { name: 'run', keys: ['Shift'] },
   { name: 'action1', keys: ['1'] }, // Bonus: Adds an interaction key for later
+ ];
+
+const characterCards = [
+  {
+    id: 'frog',
+    label: 'Frog',
+    art: String.raw`
+      @..@
+     (----)
+    ( >__< )
+    ^^ ~~ ^^`,
+    colors: ['#d9ffd6', '#5ccf59']
+  },
+  {
+    id: 'bike',
+    label: 'Bicycle',
+    art: String.raw`
+       __o
+     _ \<_
+    (_)/(_)`,
+    colors: ['#dff3ff', '#4aa3df']
+  },
+  {
+    id: 'rolly',
+    label: 'Rolly Bike',
+    art: String.raw`
+       __o  *
+     _ \<_ /
+    (@)/(@)`,
+    colors: ['#fff2c4', '#f5a623']
+  }
 ];
 
 function App() {
@@ -240,88 +271,56 @@ function App() {
           color: 'white'
         }}>
           <h1>Choose Your Character</h1>
-          <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem' }}>
-            {/* FROG CARD */}
-            <div 
-              onClick={() => setCharacter('frog')}
-              style={{ 
-                cursor: 'pointer', 
-                background: 'white', 
-                padding: '10px', 
-                borderRadius: '10px',
-                textAlign: 'center',
-                transition: 'transform 0.2s' // Adds a hover effect
-              }}
-              // Simple hover animation (optional)
-              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1.0)"}
-            >
-              <img 
-                // src="./frog-thumb.png" 
-                alt="Frog" 
-                style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '5px' }} 
-              />
-              <h3 style={{ color: 'black', margin: '10px 0 0 0' }}>Frog</h3>
-            </div>
-
-            {/* BIKE CARD */}
-            <div 
-              onClick={() => setCharacter('bike')}
-              style={{ 
-                cursor: 'pointer', 
-                background: 'white', 
-                padding: '10px', 
-                borderRadius: '10px',
-                textAlign: 'center',
-                transition: 'transform 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1.0)"}
-            >
-              <img 
-                // src="./bike-thumb.png" 
-                alt="Bicycle" 
-                style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '5px' }} 
-              />
-              <h3 style={{ color: 'black', margin: '10px 0 0 0' }}>Bicycle</h3>
-            </div>
-            {/* ROLLY CARD */}
-            <div 
-              onClick={() => setCharacter('rolly')}
-              style={{ 
-                cursor: 'pointer', background: 'white', padding: '10px', 
-                borderRadius: '10px', textAlign: 'center', transition: 'transform 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1.0)"}
-            >
-              <img 
-                // src="./bike-thumb.png" 
-                alt="Rolly" 
-                style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '5px' }} 
-              />
-              <h3 style={{ color: 'black', margin: '10px 0 0 0' }}>Rolly Bike</h3>
-            </div>
-            {/*
-                        
-            <div 
-              onClick={() => setCharacter('FrogOnBicycle')}
-              style={{ 
-                cursor: 'pointer', background: 'white', padding: '10px', 
-                borderRadius: '10px', textAlign: 'center', transition: 'transform 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1.0)"}
-            >
-              <img 
-                src="./bike-thumb.png" 
-                alt="Rolly" 
-                style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '5px' }} 
-              />
-              <h3 style={{ color: 'black', margin: '10px 0 0 0' }}>Bike on Frog</h3>
-            </div>
-            */}
-
+          <p style={{ maxWidth: 620, margin: '0.5rem 1rem 0', opacity: 0.82, textAlign: 'center' }}>
+            Original text-art portraits inspired by classic ASCII/pixel art references, made in-repo to avoid copying copyrighted character art.
+          </p>
+          <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {characterCards.map((card) => (
+              <div
+                key={card.id}
+                onClick={() => setCharacter(card.id)}
+                style={{
+                  cursor: 'pointer',
+                  background: `linear-gradient(160deg, ${card.colors[0]}, white 58%)`,
+                  padding: '12px',
+                  borderRadius: '14px',
+                  textAlign: 'center',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  boxShadow: `0 0 0 4px ${card.colors[1]}55, 0 14px 32px rgba(0,0,0,0.32)`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)'
+                  e.currentTarget.style.boxShadow = `0 0 0 5px ${card.colors[1]}99, 0 18px 36px rgba(0,0,0,0.42)`
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.0)'
+                  e.currentTarget.style.boxShadow = `0 0 0 4px ${card.colors[1]}55, 0 14px 32px rgba(0,0,0,0.32)`
+                }}
+              >
+                <pre
+                  aria-label={`${card.label} text art portrait`}
+                  style={{
+                    width: '150px',
+                    height: '150px',
+                    margin: 0,
+                    borderRadius: '8px',
+                    background: '#111827',
+                    color: card.colors[1],
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'Courier New, monospace',
+                    fontSize: card.id === 'frog' ? '22px' : '25px',
+                    lineHeight: 1.05,
+                    whiteSpace: 'pre',
+                    textShadow: `0 0 10px ${card.colors[1]}`
+                  }}
+                >
+                  {card.art}
+                </pre>
+                <h3 style={{ color: 'black', margin: '10px 0 0 0' }}>{card.label}</h3>
+              </div>
+            ))}
           </div>
         </div>
       )}

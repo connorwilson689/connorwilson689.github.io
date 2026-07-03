@@ -448,6 +448,86 @@ function FireWatchTower({ position = [0, 0, 0], rotation = [0, 0, 0] }) {
   )
 }
 
+function SpiralTowerStaircase({ position = [0, 0, 0], rotationY = 0 }) {
+  const steps = useMemo(() => (
+    Array.from({ length: 30 }, (_, i) => {
+      const angle = -Math.PI * 0.7 + i * 0.43
+      const radius = 7.15
+      const localX = Math.cos(angle) * radius
+      const localZ = Math.sin(angle) * radius
+      const cos = Math.cos(rotationY)
+      const sin = Math.sin(rotationY)
+
+      return {
+        id: `watchtower-spiral-step-${i}`,
+        position: [
+          position[0] + localX * cos + localZ * sin,
+          position[1] + 0.9 + i * 0.98,
+          position[2] - localX * sin + localZ * cos
+        ],
+        rotation: [0, rotationY - angle + Math.PI * 0.5, 0],
+        color: i % 2 === 0 ? '#8c6239' : '#a97a4b'
+      }
+    })
+  ), [position, rotationY])
+
+  return (
+    <>
+      {steps.map((step) => (
+        <RigidBody key={step.id} type="fixed" colliders="cuboid" friction={1.2}>
+          <group position={step.position} rotation={step.rotation}>
+            <mesh castShadow receiveShadow>
+              <boxGeometry args={[3.6, 0.34, 2.25]} />
+              <meshStandardMaterial color={step.color} roughness={0.82} />
+            </mesh>
+            <mesh castShadow position={[0, 0.34, -1.05]}>
+              <boxGeometry args={[3.7, 0.55, 0.14]} />
+              <meshStandardMaterial color="#5c3d27" roughness={0.8} />
+            </mesh>
+          </group>
+        </RigidBody>
+      ))}
+      <RigidBody type="fixed" colliders="cuboid" friction={1.2}>
+        <mesh position={[position[0], position[1] + 30.15, position[2]]} rotation={[0, rotationY, 0]} castShadow receiveShadow>
+          <boxGeometry args={[12.8, 0.42, 12.8]} />
+          <meshStandardMaterial color="#9a6f43" roughness={0.78} />
+        </mesh>
+      </RigidBody>
+    </>
+  )
+}
+
+function CircuitSkyscraper({ position, height = 18, width = 5, color = '#18212c', accent = '#6fffe9' }) {
+  return (
+    <RigidBody type="fixed" colliders="cuboid">
+      <group position={position}>
+        <mesh castShadow receiveShadow position={[0, height * 0.5, 0]}>
+          <boxGeometry args={[width, height, width * 0.85]} />
+          <meshStandardMaterial color={color} metalness={0.28} roughness={0.55} />
+        </mesh>
+        {Array.from({ length: Math.max(4, Math.floor(height / 3)) }, (_, floor) => (
+          <group key={`skyscraper-floor-${floor}`}>
+            {[-1, 1].map((side) => (
+              <mesh key={`skyscraper-window-${floor}-${side}`} castShadow position={[side * (width * 0.28), 1.8 + floor * 2.7, width * 0.43]}>
+                <boxGeometry args={[width * 0.22, 0.55, 0.08]} />
+                <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.75} />
+              </mesh>
+            ))}
+            <mesh castShadow position={[width * 0.5 + 0.04, 1.8 + floor * 2.7, 0]}>
+              <boxGeometry args={[0.08, 0.16, width * 0.55]} />
+              <meshStandardMaterial color="#d9af41" emissive="#8b6a00" emissiveIntensity={0.35} />
+            </mesh>
+          </group>
+        ))}
+        <mesh castShadow position={[0, height + 0.65, 0]}>
+          <boxGeometry args={[width * 0.62, 1.3, width * 0.62]} />
+          <meshStandardMaterial color="#232d3d" emissive={accent} emissiveIntensity={0.22} />
+        </mesh>
+      </group>
+    </RigidBody>
+  )
+}
+
 function GuitarProp({ position, rotation = [0, 0, 0], scale = 1 }) {
   return (
     <RigidBody type="fixed" colliders="cuboid">
@@ -538,6 +618,17 @@ function PCBSection() {
     ]
   ), [])
 
+  const circuitSkyscrapers = useMemo(() => (
+    Array.from({ length: 22 }, (_, i) => ({
+      id: `circuit-skyscraper-${i}`,
+      position: [-248 + (i % 6) * 18, -0.46, 8 + Math.floor(i / 6) * 15],
+      height: 13 + (i % 7) * 3.4,
+      width: 3.8 + (i % 4) * 0.85,
+      color: ['#151b26', '#182635', '#201d31', '#102b2f'][i % 4],
+      accent: ['#6fffe9', '#88f26d', '#ffdc5e', '#8bd3ff'][i % 4]
+    }))
+  ), [])
+
   return (
     <>
       <RigidBody type="fixed" colliders="cuboid">
@@ -597,6 +688,17 @@ function PCBSection() {
             ))}
           </group>
         </RigidBody>
+      ))}
+
+      {circuitSkyscrapers.map((tower) => (
+        <CircuitSkyscraper
+          key={tower.id}
+          position={tower.position}
+          height={tower.height}
+          width={tower.width}
+          color={tower.color}
+          accent={tower.accent}
+        />
       ))}
 
       {capacitorTowers.map((tower) => (
@@ -842,6 +944,7 @@ function TownLayout() {
       ))}
 
       <FireWatchTower position={[-82, -0.5, 58]} rotation={[0, 2.86, 0]} />
+      <SpiralTowerStaircase position={[-82, -0.5, 58]} rotationY={2.86} />
 
       {[-70, -50, -30, -10, 10, 30, 50, 70].map((x) => (
         <group key={`lamp-${x}`} position={[x, -0.45, 0]}>
