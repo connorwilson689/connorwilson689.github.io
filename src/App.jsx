@@ -270,10 +270,6 @@ function App() {
           justifyContent: 'center',
           color: 'white'
         }}>
-          <h1>Choose Your Character</h1>
-          <p style={{ maxWidth: 620, margin: '0.5rem 1rem 0', opacity: 0.82, textAlign: 'center' }}>
-            Original text-art portraits inspired by classic ASCII/pixel art references, made in-repo to avoid copying copyrighted character art.
-          </p>
           <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
             {characterCards.map((card) => (
               <div
@@ -309,7 +305,10 @@ function App() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontFamily: 'Courier New, monospace',
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace',
+                    fontVariantLigatures: 'none',
+                    textAlign: 'left',
+                    transform: 'rotate(0deg)',
                     fontSize: card.id === 'frog' ? '22px' : '25px',
                     lineHeight: 1.05,
                     whiteSpace: 'pre',
@@ -318,7 +317,6 @@ function App() {
                 >
                   {card.art}
                 </pre>
-                <h3 style={{ color: 'black', margin: '10px 0 0 0' }}>{card.label}</h3>
               </div>
             ))}
           </div>
@@ -355,12 +353,12 @@ function App() {
         //pixelated added to keep it from bluring
         style={{ height: '100vh', background: '#ececec', imageRendering: 'pixelated' }}
       >
-        <color attach="background" args={["#9ed4ff"]} />
-        <fog attach="fog" args={["#b7dcff", 28, 140]} />
-        <ambientLight intensity={0.75} />
-        <hemisphereLight args={["#b8e8ff", "#6d8b55", 0.8]} />
-        <directionalLight position={[22, 24, 12]} intensity={1.5} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
-        <Sky distance={450000} sunPosition={[12, 6, 8]} turbidity={6} rayleigh={1.6} mieCoefficient={0.004} mieDirectionalG={0.9} />
+        <color attach="background" args={["#f39a67"]} />
+        <fog attach="fog" args={["#d97967", 34, 170]} />
+        <ambientLight intensity={0.82} />
+        <hemisphereLight args={["#ffbd82", "#4f6f40", 0.9]} />
+        <directionalLight position={[22, 15, 12]} intensity={1.7} color="#ff9f5f" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+        <Sky distance={450000} sunPosition={[8, 1.7, 8]} turbidity={9} rayleigh={3.2} mieCoefficient={0.012} mieDirectionalG={0.88} />
         <Cloud position={[-18, 18, -30]} speed={0.12} opacity={0.5} width={16} depth={4} segments={12} />
         <Cloud position={[12, 15, -26]} speed={0.08} opacity={0.45} width={13} depth={4} segments={12} />
         <Cloud position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={12} />
