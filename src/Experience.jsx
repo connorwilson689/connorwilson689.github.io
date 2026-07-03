@@ -356,6 +356,98 @@ function TrailerHome({ position = [0, 0, 0], bodyColor = '#d6d2c7', trimColor = 
   )
 }
 
+function FireWatchTower({ position = [0, 0, 0], rotation = [0, 0, 0] }) {
+  const legOffsets = [
+    [-4.2, 0, -4.2],
+    [4.2, 0, -4.2],
+    [-4.2, 0, 4.2],
+    [4.2, 0, 4.2]
+  ]
+
+  return (
+    <RigidBody type="fixed" colliders="cuboid">
+      <group position={position} rotation={rotation}>
+        {legOffsets.map(([x, , z]) => (
+          <mesh key={`tower-leg-${x}-${z}`} castShadow receiveShadow position={[x, 14.5, z]} rotation={[0.08 * Math.sign(z), 0, -0.08 * Math.sign(x)]}>
+            <cylinderGeometry args={[0.22, 0.32, 29, 10]} />
+            <meshStandardMaterial color="#5f3b22" roughness={0.78} />
+          </mesh>
+        ))}
+
+        {[5, 10.5, 16, 21.5].map((height, index) => (
+          <group key={`tower-cross-brace-${height}`}>
+            <mesh castShadow position={[0, height, -4.35]} rotation={[0, 0, index % 2 === 0 ? 0.64 : -0.64]}>
+              <boxGeometry args={[10.8, 0.22, 0.22]} />
+              <meshStandardMaterial color="#6e472a" roughness={0.8} />
+            </mesh>
+            <mesh castShadow position={[0, height, 4.35]} rotation={[0, 0, index % 2 === 0 ? -0.64 : 0.64]}>
+              <boxGeometry args={[10.8, 0.22, 0.22]} />
+              <meshStandardMaterial color="#6e472a" roughness={0.8} />
+            </mesh>
+            <mesh castShadow position={[-4.35, height, 0]} rotation={[index % 2 === 0 ? -0.64 : 0.64, 0, 0]}>
+              <boxGeometry args={[0.22, 0.22, 10.8]} />
+              <meshStandardMaterial color="#6e472a" roughness={0.8} />
+            </mesh>
+            <mesh castShadow position={[4.35, height, 0]} rotation={[index % 2 === 0 ? 0.64 : -0.64, 0, 0]}>
+              <boxGeometry args={[0.22, 0.22, 10.8]} />
+              <meshStandardMaterial color="#6e472a" roughness={0.8} />
+            </mesh>
+          </group>
+        ))}
+
+        <mesh castShadow receiveShadow position={[0, 28.4, 0]}>
+          <boxGeometry args={[11.5, 0.55, 11.5]} />
+          <meshStandardMaterial color="#7a5537" roughness={0.72} />
+        </mesh>
+        <mesh castShadow receiveShadow position={[0, 31.25, 0]}>
+          <boxGeometry args={[8.8, 5.2, 8.8]} />
+          <meshStandardMaterial color="#b77842" roughness={0.62} />
+        </mesh>
+        <mesh castShadow receiveShadow position={[0, 34.25, 0]}>
+          <boxGeometry args={[9.8, 0.42, 9.8]} />
+          <meshStandardMaterial color="#4a3325" roughness={0.82} />
+        </mesh>
+        <mesh castShadow position={[0, 35.45, 0]} rotation={[0, Math.PI * 0.25, 0]}>
+          <coneGeometry args={[7.2, 2.6, 4]} />
+          <meshStandardMaterial color="#7f251d" roughness={0.7} />
+        </mesh>
+
+        {[
+          [0, 31.55, 4.46, 0],
+          [0, 31.55, -4.46, 0],
+          [4.46, 31.55, 0, Math.PI * 0.5],
+          [-4.46, 31.55, 0, Math.PI * 0.5]
+        ].map(([x, y, z, yaw]) => (
+          <mesh key={`tower-window-${x}-${z}`} castShadow position={[x, y, z]} rotation={[0, yaw, 0]}>
+            <boxGeometry args={[4.6, 1.45, 0.12]} />
+            <meshStandardMaterial color="#a7d7f4" emissive="#4f8aa5" emissiveIntensity={0.24} metalness={0.1} roughness={0.18} />
+          </mesh>
+        ))}
+
+        <mesh castShadow receiveShadow position={[-6.15, 15.5, 0]} rotation={[0, 0, -0.38]}>
+          <boxGeometry args={[0.85, 30, 0.55]} />
+          <meshStandardMaterial color="#4b3222" roughness={0.8} />
+        </mesh>
+        {Array.from({ length: 14 }, (_, i) => (
+          <mesh key={`tower-ladder-rung-${i}`} castShadow position={[-6.15, 2.2 + i * 1.85, 0]}>
+            <boxGeometry args={[2.2, 0.16, 0.45]} />
+            <meshStandardMaterial color="#5c3d27" roughness={0.78} />
+          </mesh>
+        ))}
+
+        <mesh castShadow position={[0, 37.2, 0]}>
+          <cylinderGeometry args={[0.11, 0.11, 4.4, 8]} />
+          <meshStandardMaterial color="#2d2a25" />
+        </mesh>
+        <mesh castShadow position={[0, 39.6, 0]}>
+          <sphereGeometry args={[0.6, 12, 12]} />
+          <meshStandardMaterial color="#ffeb9c" emissive="#ff9e2c" emissiveIntensity={0.7} />
+        </mesh>
+      </group>
+    </RigidBody>
+  )
+}
+
 function GuitarProp({ position, rotation = [0, 0, 0], scale = 1 }) {
   return (
     <RigidBody type="fixed" colliders="cuboid">
@@ -748,6 +840,8 @@ function TownLayout() {
           trimColor={trailer.trim}
         />
       ))}
+
+      <FireWatchTower position={[82, -0.5, -58]} rotation={[0, -0.28, 0]} />
 
       {[-70, -50, -30, -10, 10, 30, 50, 70].map((x) => (
         <group key={`lamp-${x}`} position={[x, -0.45, 0]}>
