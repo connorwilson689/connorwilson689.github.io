@@ -448,6 +448,56 @@ function FireWatchTower({ position = [0, 0, 0], rotation = [0, 0, 0] }) {
   )
 }
 
+
+function WatchtowerSpiralStairs({ position = [0, 0, 0], rotationY = 0 }) {
+  const steps = useMemo(() => Array.from({ length: 31 }, (_, i) => {
+    const angle = rotationY + i * 0.47
+    const radius = 7.05
+    return {
+      id: `watchtower-spiral-step-${i}`,
+      position: [
+        position[0] + Math.cos(angle) * radius,
+        position[1] + 0.35 + i * 0.9,
+        position[2] + Math.sin(angle) * radius
+      ],
+      rotation: [0, -angle, 0],
+      color: i % 2 === 0 ? '#8d6645' : '#9b7250'
+    }
+  }), [position, rotationY])
+
+  const railPosts = useMemo(() => steps.filter((_, i) => i % 2 === 0).map((step, i) => ({
+    id: `watchtower-rail-post-${i}`,
+    position: [step.position[0], step.position[1] + 0.9, step.position[2]],
+    rotation: step.rotation
+  })), [steps])
+
+  return (
+    <>
+      {steps.map((step) => (
+        <RigidBody key={step.id} type="fixed" colliders="cuboid" friction={1.2}>
+          <mesh position={step.position} rotation={step.rotation} castShadow receiveShadow>
+            <boxGeometry args={[4.2, 0.35, 1.7]} />
+            <meshStandardMaterial color={step.color} roughness={0.82} />
+          </mesh>
+        </RigidBody>
+      ))}
+
+      {railPosts.map((post) => (
+        <group key={post.id} position={post.position} rotation={post.rotation}>
+          <mesh castShadow position={[-1.75, 0, 0]}>
+            <cylinderGeometry args={[0.08, 0.08, 1.8, 8]} />
+            <meshStandardMaterial color="#4b3222" roughness={0.8} />
+          </mesh>
+          <mesh castShadow position={[1.75, 0, 0]}>
+            <cylinderGeometry args={[0.08, 0.08, 1.8, 8]} />
+            <meshStandardMaterial color="#4b3222" roughness={0.8} />
+          </mesh>
+        </group>
+      ))}
+    </>
+  )
+}
+
 function GuitarProp({ position, rotation = [0, 0, 0], scale = 1 }) {
   return (
     <RigidBody type="fixed" colliders="cuboid">
@@ -538,6 +588,19 @@ function PCBSection() {
     ]
   ), [])
 
+
+  const circuitSkyscrapers = useMemo(() => (
+    Array.from({ length: 18 }, (_, i) => ({
+      id: `circuit-skyscraper-${i}`,
+      position: [-244 + (i % 6) * 17.5, 0, -91 + Math.floor(i / 6) * 43],
+      height: 12 + (i % 5) * 4 + Math.floor(i / 6) * 2,
+      width: 3.2 + (i % 3) * 0.8,
+      depth: 3.4 + ((i + 1) % 3) * 0.75,
+      color: ['#14202f', '#18283b', '#102b2d', '#25223d'][i % 4],
+      glow: ['#5df7ff', '#f7d34a', '#ff75d6', '#8cff79'][i % 4]
+    }))
+  ), [])
+
   return (
     <>
       <RigidBody type="fixed" colliders="cuboid">
@@ -610,6 +673,28 @@ function PCBSection() {
               <cylinderGeometry args={[1.45, 1.45, 0.5, 20]} />
               <meshStandardMaterial color="#84d3ff" emissive="#2b88aa" emissiveIntensity={0.4} />
             </mesh>
+          </group>
+        </RigidBody>
+      ))}
+
+
+      {circuitSkyscrapers.map((building) => (
+        <RigidBody key={building.id} type="fixed" colliders="cuboid">
+          <group position={building.position}>
+            <mesh castShadow receiveShadow position={[0, building.height * 0.5, 0]}>
+              <boxGeometry args={[building.width, building.height, building.depth]} />
+              <meshStandardMaterial color={building.color} metalness={0.22} roughness={0.48} />
+            </mesh>
+            <mesh castShadow position={[0, building.height + 0.22, 0]}>
+              <boxGeometry args={[building.width * 0.8, 0.42, building.depth * 0.8]} />
+              <meshStandardMaterial color={building.glow} emissive={building.glow} emissiveIntensity={0.7} />
+            </mesh>
+            {[-0.32, 0, 0.32].map((offset, row) => (
+              <mesh key={`${building.id}-window-${row}`} castShadow position={[0, building.height * (0.28 + row * 0.18), building.depth * 0.51]}>
+                <boxGeometry args={[building.width * 0.62, 0.25, 0.08]} />
+                <meshStandardMaterial color={building.glow} emissive={building.glow} emissiveIntensity={0.55 + offset} />
+              </mesh>
+            ))}
           </group>
         </RigidBody>
       ))}
@@ -842,6 +927,7 @@ function TownLayout() {
       ))}
 
       <FireWatchTower position={[82, -0.5, -58]} rotation={[0, -0.28, 0]} />
+      <WatchtowerSpiralStairs position={[82, -0.5, -58]} rotationY={-0.28} />
 
       {[-70, -50, -30, -10, 10, 30, 50, 70].map((x) => (
         <group key={`lamp-${x}`} position={[x, -0.45, 0]}>

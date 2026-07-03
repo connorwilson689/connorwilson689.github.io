@@ -6,6 +6,63 @@ import Experience from './Experience';
 import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
 
+
+const characterAscii = {
+  frog: String.raw`
+        @..@
+      (------)
+    (  >____<  )
+     ^^      ^^
+   /|  FROG  |\
+  /_|________|_\
+     (__) (__)
+  hop  hop  hop`,
+  bike: String.raw`
+        __o
+      _/'<,_
+     (*)/ (*)
+   == BICYCLE ==
+   .-=========-.
+  /  circles go \
+ (___round_____ )
+      O     O`,
+  rolly: String.raw`
+    _o_  _o_  _o_
+   /|\  /|\  /|\
+  / \  / \  / \
+   O====ROLLY====O
+  /\   turbo   /\
+ /__\_________/__\
+    bounce wheel
+      vroom!`
+}
+
+function CharacterAscii({ type }) {
+  return (
+    <pre style={{
+      width: 150,
+      height: 150,
+      margin: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 5,
+      background: type === 'frog' ? '#d8ffd0' : type === 'bike' ? '#d8eeff' : '#ffe8c6',
+      color: type === 'frog' ? '#164d20' : type === 'bike' ? '#123c63' : '#5c3100',
+      fontFamily: '"Courier New", monospace',
+      fontSize: 12,
+      lineHeight: 1.1,
+      fontWeight: 900,
+      letterSpacing: -0.5,
+      whiteSpace: 'pre',
+      overflow: 'hidden',
+      boxShadow: 'inset 0 0 0 4px rgba(0,0,0,0.08)'
+    }}>
+      {characterAscii[type]}
+    </pre>
+  )
+}
+
 // 1. Define your keyboard map
 const keyboardMap = [
   { name: 'forward', keys: ['ArrowUp', 'KeyW'] },
@@ -256,11 +313,7 @@ function App() {
               onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
               onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1.0)"}
             >
-              <img 
-                // src="./frog-thumb.png" 
-                alt="Frog" 
-                style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '5px' }} 
-              />
+              <CharacterAscii type="frog" />
               <h3 style={{ color: 'black', margin: '10px 0 0 0' }}>Frog</h3>
             </div>
 
@@ -278,11 +331,7 @@ function App() {
               onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
               onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1.0)"}
             >
-              <img 
-                // src="./bike-thumb.png" 
-                alt="Bicycle" 
-                style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '5px' }} 
-              />
+              <CharacterAscii type="bike" />
               <h3 style={{ color: 'black', margin: '10px 0 0 0' }}>Bicycle</h3>
             </div>
             {/* ROLLY CARD */}
@@ -295,11 +344,7 @@ function App() {
               onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
               onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1.0)"}
             >
-              <img 
-                // src="./bike-thumb.png" 
-                alt="Rolly" 
-                style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '5px' }} 
-              />
+              <CharacterAscii type="rolly" />
               <h3 style={{ color: 'black', margin: '10px 0 0 0' }}>Rolly Bike</h3>
             </div>
             {/*
