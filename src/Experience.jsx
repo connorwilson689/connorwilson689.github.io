@@ -841,7 +841,7 @@ function TownLayout() {
         />
       ))}
 
-      <FireWatchTower position={[82, -0.5, -58]} rotation={[0, -0.28, 0]} />
+      <FireWatchTower position={[-82, -0.5, 58]} rotation={[0, 2.86, 0]} />
 
       {[-70, -50, -30, -10, 10, 30, 50, 70].map((x) => (
         <group key={`lamp-${x}`} position={[x, -0.45, 0]}>
@@ -1017,6 +1017,8 @@ export default function Experience({ activeCharacter, onFallStateChange }) {
         maxVelLimit={characterStats.speed}
         jumpVel={characterStats.jump}
         camTargetPos={{ x: 0, y: 1.2, z: 0 }}
+        camMoveSpeed={1.6}
+        position={[0, 4, 0]}
         capsuleRadius={characterStats.radius}
         capsuleHalfHeight={characterStats.height}
       >
