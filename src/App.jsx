@@ -367,11 +367,10 @@ function App() {
         {/* use this to see physics boxes: <Physics debug timeStep="vary"> */}
         <Physics timeStep="vary">
           <Suspense fallback={null}>
-            {/* Pass the chosen character down to Experience */}
-            {/* If char is null, we pass 'frog' as default just to prevent crash, 
-                but the menu covers it anyway. */}
+            {/* Pass the chosen character down after selection; Experience delays spawning. */}
             <Experience
-              activeCharacter={character || 'frog'}
+              key={character || 'no-character'}
+              activeCharacter={character}
               onFallStateChange={setShowFallMessage}
             />
           </Suspense>
