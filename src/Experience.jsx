@@ -54,7 +54,7 @@ function Bicycle() {
   useFrame((_, delta) => {
     const { forward, backward, leftward, rightward } = get()
     const isMoving = forward || backward || leftward || rightward
-    const speed = 15
+    const speed = 28
 
     if (isMoving) {
       const direction = backward ? 1 : -1
@@ -1207,7 +1207,7 @@ export default function Experience({ activeCharacter, onFallStateChange }) {
   const characterStats = useMemo(() => {
     if (activeCharacter === 'bike') {
       return {
-        speed: 15, jump: 2, scale: 1,
+        speed: 28, jump: 2, scale: 1,
         radius: 0.3, height: 0.3
       }
     }
