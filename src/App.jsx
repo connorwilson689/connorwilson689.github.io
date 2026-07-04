@@ -64,6 +64,7 @@ function App() {
   //RESOLUTION LOCK
   const [dpr, setDpr] = useState(1); // State to hold our calculated resolution
   const [pixelationWidth, setPixelationWidth] = useState(400);
+  const [cameraSensitivity, setCameraSensitivity] = useState(1.6);
   const [showFallMessage, setShowFallMessage] = useState(false);
   const [loopingThoughts, setLoopingThoughts] = useState([]);
 
@@ -254,6 +255,29 @@ function App() {
           <span>chunky</span>
           <span>smooth</span>
         </div>
+
+        <label
+          htmlFor="camera-sensitivity-slider"
+          style={{ display: 'flex', justifyContent: 'space-between', gap: 12, margin: '14px 0 8px' }}
+        >
+          <span>Camera</span>
+          <span>{cameraSensitivity.toFixed(1)}x</span>
+        </label>
+        <input
+          id="camera-sensitivity-slider"
+          type="range"
+          min="0.4"
+          max="3"
+          step="0.1"
+          value={cameraSensitivity}
+          onChange={(event) => setCameraSensitivity(Number(event.target.value))}
+          style={{ width: '100%', accentColor: '#ffd18f' }}
+          aria-label="Adjust camera sensitivity"
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, opacity: 0.78 }}>
+          <span>gentle</span>
+          <span>quick</span>
+        </div>
       </div>
 
       {/* --- THE HTML MENU OVERLAY --- */}
@@ -357,12 +381,12 @@ function App() {
         <fog attach="fog" args={["#d97967", 34, 170]} />
         <ambientLight intensity={0.82} />
         <hemisphereLight args={["#ffbd82", "#4f6f40", 0.9]} />
-        <directionalLight position={[22, 15, 12]} intensity={1.7} color="#ff9f5f" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+        <directionalLight position={[22, 15, 12]} intensity={1.7} color="#ff9f5f" castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} />
         <Sky distance={450000} sunPosition={[8, 1.7, 8]} turbidity={9} rayleigh={3.2} mieCoefficient={0.012} mieDirectionalG={0.88} />
-        <Cloud position={[-18, 18, -30]} speed={0.12} opacity={0.5} width={16} depth={4} segments={12} />
-        <Cloud position={[12, 15, -26]} speed={0.08} opacity={0.45} width={13} depth={4} segments={12} />
-        <Cloud position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={12} />
-        <Stars radius={170} depth={40} count={900} factor={5} saturation={0} fade speed={0.6} />
+        <Cloud position={[-18, 18, -30]} speed={0.12} opacity={0.5} width={16} depth={4} segments={8} />
+        <Cloud position={[12, 15, -26]} speed={0.08} opacity={0.45} width={13} depth={4} segments={8} />
+        <Cloud position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={8} />
+        <Stars radius={170} depth={40} count={450} factor={5} saturation={0} fade speed={0.6} />
         
         {/* use this to see physics boxes: <Physics debug> */}
         <Physics>
@@ -372,6 +396,7 @@ function App() {
               key={character || 'no-character'}
               activeCharacter={character}
               onFallStateChange={setShowFallMessage}
+              cameraSensitivity={cameraSensitivity}
             />
           </Suspense>
         </Physics>
