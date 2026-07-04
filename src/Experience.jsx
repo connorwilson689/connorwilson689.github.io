@@ -157,7 +157,7 @@ function PropFrog({ position, rotation = [0, 0, 0], scale = 0.5 }) {
   )
 }
 
-function GiantSkyFrog({ position = [0, 92, -130], scale = 34 }) {
+function GiantSkyFrog({ position = [0, 112, -130], scale = 170 }) {
   const { nodes, materials } = useGLTF('./frog.glb')
   const frogMaterial = materials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })
 
@@ -335,6 +335,50 @@ function FrogBlimp({ center = [0, 54, 0], radius = 150, speed = 0.09, phase = 0,
       </group>
     </group>
   )
+}
+
+
+function FrogBikeOddity({ entity }) {
+  const { nodes: frogNodes, materials: frogMaterials } = useGLTF('./frog.glb')
+  const { nodes: bikeNodes, materials: bikeMaterials } = useGLTF('./bicycle.glb')
+  const frogMaterial = frogMaterials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })
+  const bikeFrameMaterial = bikeMaterials.BikeFrameMat || bikeMaterials.Material
+  const bikeTireMaterial = bikeMaterials.BikeTire || bikeMaterials.Material
+
+  const bike = (suffix, position, rotation, scale) => (
+    <group key={`${entity.id}-bike-${suffix}`} position={position} rotation={rotation} scale={scale}>
+      <mesh castShadow receiveShadow geometry={bikeNodes['FullBike_-_Frame-1'].geometry} position={bikeNodes['FullBike_-_Frame-1'].position} rotation={bikeNodes['FullBike_-_Frame-1'].rotation} material={bikeFrameMaterial} />
+      <mesh castShadow receiveShadow geometry={bikeNodes['FullBike_-_Wheel-1'].geometry} position={bikeNodes['FullBike_-_Wheel-1'].position} rotation={bikeNodes['FullBike_-_Wheel-1'].rotation} material={bikeTireMaterial} />
+      <mesh castShadow receiveShadow geometry={bikeNodes['FullBike_-_Wheel-2'].geometry} position={bikeNodes['FullBike_-_Wheel-2'].position} rotation={bikeNodes['FullBike_-_Wheel-2'].rotation} material={bikeTireMaterial} />
+    </group>
+  )
+
+  const frog = (suffix, position, rotation, scale) => (
+    <group key={`${entity.id}-frog-${suffix}`} position={position} rotation={rotation} scale={scale}>
+      <mesh castShadow receiveShadow geometry={frogNodes.Body.geometry} position={frogNodes.Body.position} rotation={frogNodes.Body.rotation} material={frogMaterial} />
+      <mesh castShadow receiveShadow geometry={frogNodes.Jaw.geometry} position={frogNodes.Jaw.position} rotation={frogNodes.Jaw.rotation} material={frogMaterial} />
+    </group>
+  )
+
+  const parts = [
+    frog('core', [0, 0.35 * entity.scale, 0], [entity.roll, entity.twist, entity.pitch], 0.38 * entity.scale),
+    bike('spine', [0, 0, 0], [entity.pitch, entity.twist + Math.PI * 0.5, entity.roll], 0.42 * entity.scale)
+  ]
+
+  if (entity.variant % 2 === 0) {
+    parts.push(bike('antler-left', [-1.25 * entity.scale, 0.75 * entity.scale, 0], [0, entity.twist, Math.PI * 0.45], 0.18 * entity.scale))
+    parts.push(bike('antler-right', [1.25 * entity.scale, 0.75 * entity.scale, 0], [0, entity.twist, -Math.PI * 0.45], 0.18 * entity.scale))
+  }
+
+  if (entity.variant % 3 === 0) {
+    parts.push(frog('satellite', [0, 1.2 * entity.scale, -1.15 * entity.scale], [Math.PI * 0.25, entity.twist * 1.7, 0], 0.22 * entity.scale))
+  }
+
+  if (entity.variant % 5 === 0) {
+    parts.push(frog('tail', [0, -0.15 * entity.scale, 1.35 * entity.scale], [Math.PI, entity.twist, 0], 0.18 * entity.scale))
+  }
+
+  return <group position={entity.position} rotation={[0, entity.yaw, 0]}>{parts}</group>
 }
 
 function TrailerHome({ position = [0, 0, 0], bodyColor = '#d6d2c7', trimColor = '#8b8a85' }) {
@@ -990,6 +1034,34 @@ function TownLayout() {
     ]
   ), [])
 
+
+  const frogBikeOddities = useMemo(() => {
+    const random = (seed) => {
+      const value = Math.sin(seed * 999.73) * 43758.5453
+      return value - Math.floor(value)
+    }
+
+    return Array.from({ length: 50 }, (_, i) => {
+      const ring = 72 + (i % 5) * 29
+      const angle = random(i + 1) * Math.PI * 2
+      const jitter = (random(i + 51) - 0.5) * 28
+      return {
+        id: `frog-bike-oddity-${i}`,
+        variant: i,
+        position: [
+          Math.cos(angle) * (ring + jitter),
+          -0.28 + random(i + 101) * 9.5,
+          Math.sin(angle) * (ring - jitter)
+        ],
+        scale: 0.55 + random(i + 151) * 2.8,
+        yaw: random(i + 201) * Math.PI * 2,
+        pitch: (random(i + 251) - 0.5) * Math.PI,
+        roll: (random(i + 301) - 0.5) * Math.PI,
+        twist: random(i + 351) * Math.PI * 2
+      }
+    })
+  }, [])
+
   const skyWingBikes = useMemo(() => (
     [
       { id: 'sky-bike-1', center: [0, 30, -6], radius: 120, speed: 0.14, phase: 0.2, altitudeWave: 4.2, scale: 0.72 },
@@ -1140,6 +1212,11 @@ function TownLayout() {
           rotation={frog.rotation}
           scale={frog.scale}
         />
+      ))}
+
+
+      {frogBikeOddities.map((entity) => (
+        <FrogBikeOddity key={entity.id} entity={entity} />
       ))}
 
       {edgeGiants.map((giant) => (
