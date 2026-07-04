@@ -157,7 +157,7 @@ function PropFrog({ position, rotation = [0, 0, 0], scale = 0.5 }) {
   )
 }
 
-function GiantSkyFrog({ position = [0, 112, -130], scale = 170 }) {
+function GiantSkyFrog({ position = [0, 260, -130], scale = 170 }) {
   const { nodes, materials } = useGLTF('./frog.glb')
   const frogMaterial = materials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })
 
@@ -1277,7 +1277,7 @@ const FALL_MESSAGE_HEIGHT = -8
 const RESPAWN_HEIGHT = -30
 const RESPAWN_COOLDOWN_SECONDS = 1.5
 
-export default function Experience({ activeCharacter, onFallStateChange }) {
+export default function Experience({ activeCharacter, onFallStateChange, cameraSensitivity = 1.6 }) {
   const { camera } = useThree()
   const [respawnKey, setRespawnKey] = useState(0)
   const isFallingRef = useRef(false)
@@ -1340,7 +1340,7 @@ export default function Experience({ activeCharacter, onFallStateChange }) {
           maxVelLimit={characterStats.speed}
           jumpVel={characterStats.jump}
           camTargetPos={{ x: 0, y: 1.2, z: 0 }}
-          camMoveSpeed={1.6}
+          camMoveSpeed={cameraSensitivity}
           position={CHARACTER_SPAWN_POSITION}
           capsuleRadius={characterStats.radius}
           capsuleHalfHeight={characterStats.height}
