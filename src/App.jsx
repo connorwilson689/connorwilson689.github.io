@@ -31,16 +31,16 @@ const characterCards = [
     art: String.raw`
       @..@
      (----)
-    ( >__< )
-    ^^ ~~ ^^`,
+       ||
+       ~~`,
     colors: ['#d9ffd6', '#5ccf59']
   },
   {
     id: 'bike',
     label: 'Bicycle',
     art: String.raw`
-       __o
-     _ \<_
+       __
+     _ \_
     (_)/(_)`,
     colors: ['#dff3ff', '#4aa3df']
   },
@@ -48,8 +48,8 @@ const characterCards = [
     id: 'rolly',
     label: 'Rolly Bike',
     art: String.raw`
-       __o  *
-     _ \<_ /
+       __
+     _ \_ /
     (@)/(@)`,
     colors: ['#fff2c4', '#f5a623']
   }
@@ -302,12 +302,12 @@ function App() {
                     borderRadius: '8px',
                     background: '#111827',
                     color: card.colors[1],
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    display: 'grid',
+                    placeItems: 'center',
+                    overflow: 'hidden',
                     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace',
                     fontVariantLigatures: 'none',
-                    textAlign: 'left',
+                    textAlign: 'center',
                     transform: 'rotate(0deg)',
                     fontSize: card.id === 'frog' ? '22px' : '25px',
                     lineHeight: 1.05,
