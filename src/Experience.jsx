@@ -1248,7 +1248,7 @@ export default function Experience({ activeCharacter, onFallStateChange }) {
       }
     }
     return {
-      speed: 6, jump: 10, scale: 0.5,
+      speed: 6, jump: 10, scale: 1,
       radius: 0.3, height: 0.3
     }
   }, [activeCharacter])

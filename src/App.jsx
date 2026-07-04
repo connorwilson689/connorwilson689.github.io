@@ -364,8 +364,8 @@ function App() {
         <Cloud position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={12} />
         <Stars radius={170} depth={40} count={900} factor={5} saturation={0} fade speed={0.6} />
         
-        {/* use this to see physics boxes: <Physics debug timeStep="vary"> */}
-        <Physics timeStep="vary">
+        {/* use this to see physics boxes: <Physics debug> */}
+        <Physics>
           <Suspense fallback={null}>
             {/* Pass the chosen character down after selection; Experience delays spawning. */}
             <Experience
