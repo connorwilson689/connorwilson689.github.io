@@ -1,5 +1,5 @@
 import { RigidBody } from '@react-three/rapier';
-import Ecctrl from 'ecctrl';
+import Ecctrl, { useJoystickControls } from 'ecctrl';
 import { useKeyboardControls, useGLTF } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
@@ -8,12 +8,15 @@ import { useEffect, useRef, useMemo, useState } from 'react'
 function Frog() {
   const { nodes, materials } = useGLTF('./frog.glb')
   const [, get] = useKeyboardControls()
+  const getJoystickValues = useJoystickControls((state) => state.getJoystickValues)
   const jawRef = useRef()
 
   useFrame((state) => {
     const { forward, backward, left, right, leftward, rightward } = get()
+    const { joystickDis } = getJoystickValues()
+    const isMoving = forward || backward || left || right || leftward || rightward || joystickDis > 0
 
-    if (forward || backward || left || right || leftward || rightward) {
+    if (isMoving) {
       if (jawRef.current) {
         const flapSpeed = 20
         const maxOpenAmount = 0.4
@@ -1192,7 +1195,6 @@ function TownLayout() {
   )
 }
 
-const CHARACTER_SPAWN_DELAY_MS = 10000
 const CHARACTER_SPAWN_POSITION = [0, 45, 0]
 const FALL_MESSAGE_HEIGHT = -8
 const RESPAWN_HEIGHT = -30
@@ -1200,7 +1202,6 @@ const RESPAWN_COOLDOWN_SECONDS = 1.5
 
 export default function Experience({ activeCharacter, onFallStateChange }) {
   const { camera } = useThree()
-  const [characterReady, setCharacterReady] = useState(false)
   const [respawnKey, setRespawnKey] = useState(0)
   const isFallingRef = useRef(false)
   const lastRespawnTimeRef = useRef(-Infinity)
@@ -1210,13 +1211,7 @@ export default function Experience({ activeCharacter, onFallStateChange }) {
     lastRespawnTimeRef.current = -Infinity
     onFallStateChange?.(false)
 
-    if (!activeCharacter) return undefined
-
-    const spawnTimer = window.setTimeout(() => {
-      setCharacterReady(true)
-    }, CHARACTER_SPAWN_DELAY_MS)
-
-    return () => window.clearTimeout(spawnTimer)
+    return undefined
   }, [activeCharacter, onFallStateChange])
 
   useFrame((state) => {
@@ -1226,7 +1221,7 @@ export default function Experience({ activeCharacter, onFallStateChange }) {
       onFallStateChange?.(falling)
     }
 
-    if (!characterReady) return
+    if (!activeCharacter) return
 
     const shouldRespawn = camera.position.y < RESPAWN_HEIGHT
       && state.clock.elapsedTime - lastRespawnTimeRef.current > RESPAWN_COOLDOWN_SECONDS
@@ -1260,7 +1255,7 @@ export default function Experience({ activeCharacter, onFallStateChange }) {
 
   return (
     <>
-      {activeCharacter && characterReady && (
+      {activeCharacter && (
         <Ecctrl
           key={`${activeCharacter}-${respawnKey}`}
           camInitDis={-6}
@@ -1273,7 +1268,7 @@ export default function Experience({ activeCharacter, onFallStateChange }) {
           capsuleRadius={characterStats.radius}
           capsuleHalfHeight={characterStats.height}
         >
-          <group rotation-y={Math.PI} position={[0, -0.5, 0]}>
+          <group rotation-y={Math.PI} position={[0, -0.5, 0]} scale={characterStats.scale}>
             {(activeCharacter === 'bike' || activeCharacter === 'rolly')
               ? <Bicycle />
               : <Frog />}
