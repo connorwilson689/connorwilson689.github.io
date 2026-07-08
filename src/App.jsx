@@ -370,8 +370,8 @@ function App() {
       {/* --- THE 3D WORLD --- */}
       <Canvas
         dpr={dpr}
-        gl={{ antialias: false, powerPreference: 'high-performance' }}
-        shadows
+        gl={{ antialias: false, powerPreference: 'high-performance', stencil: false, depth: true }}
+        performance={{ min: 0.45 }}
         camera={{ position: [0, 5, 10], fov: 50 }}
         className="retro-canvas"
         //pixelated added to keep it from bluring
@@ -381,12 +381,12 @@ function App() {
         <fog attach="fog" args={["#d97967", 34, 170]} />
         <ambientLight intensity={0.82} />
         <hemisphereLight args={["#ffbd82", "#4f6f40", 0.9]} />
-        <directionalLight position={[22, 15, 12]} intensity={1.7} color="#ff9f5f" castShadow shadow-mapSize-width={512} shadow-mapSize-height={512} />
+        <directionalLight position={[22, 15, 12]} intensity={1.7} color="#ff9f5f" />
         <Sky distance={450000} sunPosition={[8, 1.7, 8]} turbidity={9} rayleigh={3.2} mieCoefficient={0.012} mieDirectionalG={0.88} />
-        <Cloud position={[-18, 18, -30]} speed={0.12} opacity={0.5} width={16} depth={4} segments={8} />
-        <Cloud position={[12, 15, -26]} speed={0.08} opacity={0.45} width={13} depth={4} segments={8} />
-        <Cloud position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={8} />
-        <Stars radius={170} depth={40} count={450} factor={5} saturation={0} fade speed={0.6} />
+        <Cloud position={[-18, 18, -30]} speed={0.12} opacity={0.5} width={16} depth={4} segments={4} />
+        <Cloud position={[12, 15, -26]} speed={0.08} opacity={0.45} width={13} depth={4} segments={4} />
+        <Cloud position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={4} />
+        <Stars radius={170} depth={40} count={220} factor={5} saturation={0} fade speed={0.6} />
         
         {/* use this to see physics boxes: <Physics debug> */}
         <Physics>
