@@ -190,33 +190,6 @@ function GiantSkyFrog({ position = [0, 520, -130], scale = 170 }) {
 
 
 
-function ElectronicTree({ position, rotation = [0, 0, 0], scale = 1, colors }) {
-  const trunkColor = colors?.trunk || '#123f4a'
-  const leafColor = colors?.leaf || '#22f5b5'
-  const glowColor = colors?.glow || '#6dfcff'
-
-  return (
-    <group position={position} rotation={rotation} scale={scale}>
-      <mesh castShadow receiveShadow position={[0, 1.65, 0]}>
-        <cylinderGeometry args={[0.18, 0.36, 3.3, 6]} />
-        <meshStandardMaterial color={trunkColor} metalness={0.55} roughness={0.22} emissive={trunkColor} emissiveIntensity={0.2} />
-      </mesh>
-      <mesh castShadow receiveShadow position={[0, 3.55, 0]} rotation={[0, Math.PI * 0.25, 0]}>
-        <octahedronGeometry args={[1.25, 0]} />
-        <meshStandardMaterial color={leafColor} metalness={0.35} roughness={0.18} emissive={leafColor} emissiveIntensity={0.55} />
-      </mesh>
-      <mesh castShadow receiveShadow position={[0, 4.65, 0]} rotation={[0, Math.PI * 0.1, 0]}>
-        <tetrahedronGeometry args={[0.9, 0]} />
-        <meshStandardMaterial color={glowColor} metalness={0.2} roughness={0.12} emissive={glowColor} emissiveIntensity={0.8} />
-      </mesh>
-      <mesh position={[0, 3.55, 0]}>
-        <torusGeometry args={[1.65, 0.035, 8, 36]} />
-        <meshStandardMaterial color={glowColor} emissive={glowColor} emissiveIntensity={1.2} transparent opacity={0.72} />
-      </mesh>
-    </group>
-  )
-}
-
 function DecorativeFrog({ position, rotation = [0, 0, 0], scale = 0.5 }) {
   const { nodes, materials } = useGLTF('./frog.glb')
   const frogMaterial = materials.GreenMaterial || new THREE.MeshStandardMaterial({ color: 'green' })
@@ -1087,33 +1060,6 @@ function TownLayout() {
   ), [])
 
 
-  const electronicForest = useMemo(() => {
-    const random = (seed) => {
-      const value = Math.sin(seed * 127.91) * 10000
-      return value - Math.floor(value)
-    }
-    const palette = [
-      { trunk: '#0f3441', leaf: '#00f5d4', glow: '#78fff1' },
-      { trunk: '#2a174d', leaf: '#b76cff', glow: '#ff74f8' },
-      { trunk: '#173b25', leaf: '#64ff5f', glow: '#d9ff5f' },
-      { trunk: '#3b2412', leaf: '#ff9f1c', glow: '#fff05a' },
-      { trunk: '#10234c', leaf: '#5fd3ff', glow: '#ffffff' }
-    ]
-    const trees = []
-    for (let i = 0; i < 650; i += 1) {
-      const angle = random(i + 1) * Math.PI * 2
-      const radius = 18 + random(i + 101) * 245
-      trees.push({
-        id: `electronic-tree-${i}`,
-        position: [Math.cos(angle) * radius, -0.5, Math.sin(angle) * radius],
-        rotation: [0, random(i + 201) * Math.PI * 2, (random(i + 301) - 0.5) * 0.16],
-        scale: 0.55 + random(i + 401) * 2.9,
-        colors: palette[i % palette.length]
-      })
-    }
-    return trees
-  }, [])
-
   const randomFloodFrogs = useMemo(() => {
     const random = (seed) => {
       const value = Math.sin(seed * 313.37) * 43758.5453
@@ -1327,16 +1273,6 @@ function TownLayout() {
         />
       ))}
 
-
-      {electronicForest.map((tree) => (
-        <ElectronicTree
-          key={tree.id}
-          position={tree.position}
-          rotation={tree.rotation}
-          scale={tree.scale}
-          colors={tree.colors}
-        />
-      ))}
 
       {randomFloodFrogs.map((frog) => (
         <DecorativeFrog
