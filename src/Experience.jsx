@@ -631,13 +631,14 @@ function CircuitSkyscraper({ position, height = 18, width = 5, color = '#18212c'
   )
 }
 
+// Border tiles are visual scenery. Keeping them out of Rapier removes more than 100
+// unnecessary static bodies from every physics step.
 function CircuitBoardTile({ position, rotation = [0, 0, 0], size = [18, 0.16, 14], index = 0 }) {
   const accentColors = ['#6fffe9', '#8efc64', '#ffd24d', '#74c7ff']
   const accent = accentColors[index % accentColors.length]
 
   return (
-    <RigidBody type="fixed" colliders="cuboid">
-      <group position={position} rotation={rotation}>
+    <group position={position} rotation={rotation}>
         <mesh receiveShadow>
           <boxGeometry args={size} />
           <meshStandardMaterial color={index % 2 === 0 ? '#075b3a' : '#06492f'} roughness={0.64} metalness={0.15} />
@@ -673,7 +674,6 @@ function CircuitBoardTile({ position, rotation = [0, 0, 0], size = [18, 0.16, 14
           </mesh>
         ))}
       </group>
-    </RigidBody>
   )
 }
 
@@ -1060,39 +1060,8 @@ function TownLayout() {
   ), [])
 
 
-  const randomFloodFrogs = useMemo(() => {
-    const random = (seed) => {
-      const value = Math.sin(seed * 313.37) * 43758.5453
-      return value - Math.floor(value)
-    }
-    const frogs = []
-    for (let i = 0; i < 260; i += 1) {
-      frogs.push({
-        id: `random-flood-frog-${i}`,
-        position: [(random(i + 1) - 0.5) * 500, -0.42 + random(i + 71) * 10, (random(i + 141) - 0.5) * 400],
-        rotation: [(random(i + 211) - 0.5) * 0.7, random(i + 281) * Math.PI * 2, (random(i + 351) - 0.5) * 0.7],
-        scale: 0.28 + random(i + 421) * 1.45
-      })
-    }
-    return frogs
-  }, [])
-
-  const randomFloodBikes = useMemo(() => {
-    const random = (seed) => {
-      const value = Math.sin(seed * 619.19) * 24634.6345
-      return value - Math.floor(value)
-    }
-    const bikes = []
-    for (let i = 0; i < 320; i += 1) {
-      bikes.push({
-        id: `random-flood-bike-${i}`,
-        position: [(random(i + 3) - 0.5) * 510, -0.35 + random(i + 83) * 7.5, (random(i + 163) - 0.5) * 410],
-        rotation: [(random(i + 243) - 0.5) * Math.PI, random(i + 323) * Math.PI * 2, (random(i + 403) - 0.5) * Math.PI],
-        scale: 0.3 + random(i + 483) * 1.55
-      })
-    }
-    return bikes
-  }, [])
+  // Random floating frogs and bikes are intentionally omitted: each GLTF instance
+  // adds multiple draw calls, even when it is only background scenery.
 
   const frogBikeOddities = useMemo(() => {
     const random = (seed) => {
@@ -1236,7 +1205,7 @@ function TownLayout() {
       ))}
 
       {frontHouseBikes.map((bike) => (
-        <PropBicycle
+        <DecorativeBicycle
           key={bike.id}
             position={bike.position}
           rotation={bike.rotation}
@@ -1245,7 +1214,7 @@ function TownLayout() {
       ))}
 
       {mapBikes.map((bike) => (
-        <PropBicycle
+        <DecorativeBicycle
           key={bike.id}
             position={bike.position}
           rotation={bike.rotation}
@@ -1265,7 +1234,7 @@ function TownLayout() {
       <PCBSection />
 
       {frogTree.map((frog) => (
-        <PropFrog
+        <DecorativeFrog
           key={frog.id}
             position={frog.position}
           rotation={frog.rotation}
@@ -1273,26 +1242,7 @@ function TownLayout() {
         />
       ))}
 
-
-      {randomFloodFrogs.map((frog) => (
-        <DecorativeFrog
-          key={frog.id}
-          position={frog.position}
-          rotation={frog.rotation}
-          scale={frog.scale}
-        />
-      ))}
-
-      {randomFloodBikes.map((bike) => (
-        <DecorativeBicycle
-          key={bike.id}
-          position={bike.position}
-          rotation={bike.rotation}
-          scale={bike.scale}
-        />
-      ))}
-
-      {frogBikeOddities.map((entity) => (
+      {frogBikeOddities.slice(0, 4).map((entity) => (
         <FrogBikeOddity key={entity.id} entity={entity} />
       ))}
 
