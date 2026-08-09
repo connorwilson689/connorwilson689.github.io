@@ -3,7 +3,7 @@
 :root {
   font-family: 'Inter', Arial, sans-serif;
   color: #151512;
-  background: #d8ff3e;
+  background: #f0eee7;
   font-synthesis: none;
 }
 
@@ -15,7 +15,7 @@ button { font: inherit; }
   height: 100%;
   min-height: 620px;
   overflow: hidden;
-  background: #d8ff3e;
+  background: #f0eee7;
   display: grid;
   grid-template-rows: auto 1fr auto;
   padding: 26px 34px 28px;
@@ -140,29 +140,14 @@ button { font: inherit; }
 .camcorder-intro { max-width: 370px; font-size: 18px; line-height: 1.5; letter-spacing: -.02em; }
 .photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 70px 22px; }
 .photo-slot:nth-child(3n) { grid-column: 1 / -1; width: 68%; margin-left: auto; }
-.photo-placeholder {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: #696962;
-  border: 1px solid #aaa99f;
-  background: repeating-linear-gradient(-45deg, #e5e3db 0, #e5e3db 1px, transparent 1px, transparent 10px);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: .16em;
-}
 .photo-frame {
   position: relative;
-  aspect-ratio: 4 / 3;
   margin: 0;
+  min-height: 260px;
   overflow: hidden;
   background: #d8d5cb;
 }
-.camcorder-photo { width: 100%; height: 100%; display: block; object-fit: cover; }
+.camcorder-photo { width: 100%; height: auto; display: block; }
 .photo-number {
   position: absolute;
   right: 12px;
@@ -173,14 +158,40 @@ button { font: inherit; }
   font: 10px/1 'DM Mono', monospace;
   letter-spacing: .16em;
 }
-.placeholder-cross { font-size: 30px; font-weight: 300; line-height: 1; }
-.frame-corner { position: absolute; width: 22px; height: 22px; border-color: #1b1b18; }
-.frame-corner-top { top: 12px; left: 12px; border-top: 1px solid; border-left: 1px solid; }
-.frame-corner-bottom { bottom: 12px; right: 12px; border-bottom: 1px solid; border-right: 1px solid; }
-.photo-caption { display: flex; justify-content: space-between; gap: 20px; padding-top: 14px; border-top: 1px solid #1b1b18; margin-top: 12px; }
-.photo-caption h2 { font-size: 20px; letter-spacing: -.04em; }
-.photo-caption p { max-width: 220px; font: 10px/1.5 'DM Mono', monospace; text-transform: uppercase; }
 .camcorder-footer { border-top: 1px solid; margin-top: 100px; padding-top: 22px; }
+
+.video-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 70px; }
+.video-placeholder {
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  border: 1px solid #aaa99f;
+  color: #696962;
+  font: 10px/1 'DM Mono', monospace;
+  letter-spacing: .16em;
+}
+.video-frame { aspect-ratio: 16 / 9; margin: 0; background: #1b1b18; }
+.video-frame:nth-child(3) { grid-column: 1 / -1; }
+.video-frame video { width: 100%; height: 100%; display: block; object-fit: contain; }
+
+.character-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, .8);
+}
+.character-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; padding: 24px; }
+.character-option {
+  min-width: 150px;
+  border: 1px solid rgba(255, 255, 255, .75);
+  background: transparent;
+  color: white;
+  padding: 18px 24px;
+  cursor: pointer;
+}
+.character-option:hover, .character-option:focus-visible { background: white; color: #151512; outline: none; }
 
 .sandbox-home-button {
   position: absolute;
@@ -208,6 +219,7 @@ button { font: inherit; }
   .camcorder-header .eyebrow { grid-column: auto; }
   .camcorder-intro { font-size: 15px; }
   .photo-grid { grid-template-columns: 1fr; gap: 48px; }
+  .video-grid { grid-template-columns: 1fr; }
   .photo-slot:nth-child(3n) { grid-column: auto; width: 100%; }
 }
 
