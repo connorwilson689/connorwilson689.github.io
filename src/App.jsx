@@ -5,6 +5,7 @@ import { Suspense, useState, useEffect, useMemo } from 'react';
 import Experience from './Experience';
 import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
+import './App.css';
 
 // 1. Define your keyboard map
 const keyboardMap = [
@@ -55,7 +56,7 @@ const characterCards = [
   }
 ];
 
-function App() {
+function SolidWorksSandbox({ onExit }) {
   const [character, setCharacter] = useState(null);
   
   const setJoystick = useJoystickControls((state) => state.setJoystick)
@@ -142,6 +143,9 @@ function App() {
 
   return (
     <KeyboardControls map={keyboardMap}>
+      <button className="sandbox-home-button" type="button" onClick={onExit}>
+        <span aria-hidden="true">&larr;</span> Projects
+      </button>
   
       {/* 1. MOVE JOYSTICK (Left) */}
       <div style={{ position: 'absolute', bottom: 40, left: 40, zIndex: 99999 }}>
@@ -403,6 +407,127 @@ function App() {
       </Canvas>
     </KeyboardControls>
   );
+}
+
+const cameraPhotoSlots = [
+  { number: '01', title: 'Front', note: 'A straight-on portrait of the camera' },
+  { number: '02', title: 'Profile', note: 'The camera from either side' },
+  { number: '03', title: 'In hand', note: 'A sense of scale and use' },
+  {
+    number: '04',
+    title: 'Inside the camera',
+    note: 'A work-in-progress view of the circuitry, wiring, and lens',
+    image: '/images/camcorder/camera-internals.svg',
+    alt: 'An opened camcorder held in one hand, showing its circuit board, wiring, and lens'
+  },
+  { number: '05', title: 'Viewfinder', note: 'A look through the camera' },
+  { number: '06', title: 'In the wild', note: 'The camcorder out on a shoot' }
+];
+
+function CamcorderProject({ onExit }) {
+  return (
+    <main className="camcorder-page">
+      <nav className="camcorder-nav" aria-label="Project navigation">
+        <button type="button" onClick={onExit} className="text-button">
+          <span aria-hidden="true">&larr;</span> All projects
+        </button>
+        <span>Camcorder Project / Archive</span>
+      </nav>
+
+      <header className="camcorder-header">
+        <p className="eyebrow">Personal documentation / ongoing</p>
+        <h1>CAMCORDER<br />PROJECT</h1>
+        <p className="camcorder-intro">
+          A home for photographs of my camera, its details, and the places it goes.
+          Images will be added here as the project develops.
+        </p>
+      </header>
+
+      <section className="photo-grid" aria-label="Camcorder photo locations">
+        {cameraPhotoSlots.map((slot) => (
+          <article className="photo-slot" key={slot.number}>
+            {slot.image ? (
+              <figure className="photo-frame">
+                <img className="camcorder-photo" src={slot.image} alt={slot.alt} />
+                <span className="photo-number" aria-hidden="true">PHOTO {slot.number}</span>
+              </figure>
+            ) : (
+              <div className="photo-placeholder" aria-label={`${slot.title} photo placeholder`}>
+                <span className="frame-corner frame-corner-top" />
+                <span className="placeholder-cross" aria-hidden="true">+</span>
+                <span>PHOTO {slot.number}</span>
+                <span className="frame-corner frame-corner-bottom" />
+              </div>
+            )}
+            <div className="photo-caption">
+              <h2>{slot.title}</h2>
+              <p>{slot.note}</p>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <footer className="camcorder-footer">
+        <span>More footage soon.</span>
+        <span>© {new Date().getFullYear()}</span>
+      </footer>
+    </main>
+  );
+}
+
+function StartupMenu({ onSelect }) {
+  return (
+    <main className="startup-menu">
+      <div className="startup-grain" aria-hidden="true" />
+      <header className="startup-header">
+        <span className="startup-mark">CW</span>
+        <span>PROJECT INDEX</span>
+        <span>SELECT A WORLD</span>
+      </header>
+
+      <section className="startup-content">
+        <p className="eyebrow">Choose a project to enter</p>
+        <h1>WHERE TO?</h1>
+        <div className="project-options">
+          <button type="button" className="project-option camcorder-option" onClick={() => onSelect('camcorder')}>
+            <span className="option-number">01</span>
+            <span className="option-copy">
+              <strong>Camcorder Project</strong>
+              <small>Photographs, details &amp; field notes</small>
+            </span>
+            <span className="option-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button type="button" className="project-option sandbox-option" onClick={() => onSelect('sandbox')}>
+            <span className="option-number">02</span>
+            <span className="option-copy">
+              <strong>Solid Works Sandbox</strong>
+              <small>Enter the interactive 3D world</small>
+            </span>
+            <span className="option-arrow" aria-hidden="true">↗</span>
+          </button>
+        </div>
+      </section>
+
+      <footer className="startup-footer">
+        <span>Connor Wilson</span>
+        <span>Use mouse / touch to select</span>
+      </footer>
+    </main>
+  );
+}
+
+function App() {
+  const [project, setProject] = useState(null);
+
+  if (project === 'camcorder') {
+    return <CamcorderProject onExit={() => setProject(null)} />;
+  }
+
+  if (project === 'sandbox') {
+    return <SolidWorksSandbox onExit={() => setProject(null)} />;
+  }
+
+  return <StartupMenu onSelect={setProject} />;
 }
 
 export default App;
