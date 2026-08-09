@@ -5,6 +5,7 @@ import { Suspense, useState, useEffect, useMemo } from 'react';
 import Experience from './Experience';
 import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
+import { camcorderVideos } from './media';
 import './App.css';
 
 // 1. Define your keyboard map
@@ -26,34 +27,9 @@ const keyboardMap = [
  ];
 
 const characterCards = [
-  {
-    id: 'frog',
-    label: 'Frog',
-    art: String.raw`
-      @..@
-     (----)
-       ||
-       ~~`,
-    colors: ['#d9ffd6', '#5ccf59']
-  },
-  {
-    id: 'bike',
-    label: 'Bicycle',
-    art: String.raw`
-       __
-     _ \_
-    (_)/(_)`,
-    colors: ['#dff3ff', '#4aa3df']
-  },
-  {
-    id: 'rolly',
-    label: 'Rolly Bike',
-    art: String.raw`
-       __
-     _ \_ /
-    (@)/(@)`,
-    colors: ['#fff2c4', '#f5a623']
-  }
+  { id: 'frog', label: 'Frog' },
+  { id: 'bike', label: 'Bike' },
+  { id: 'rolly', label: 'Rolly Bike' }
 ];
 
 function SolidWorksSandbox({ onExit }) {
@@ -287,65 +263,17 @@ function SolidWorksSandbox({ onExit }) {
       {/* --- THE HTML MENU OVERLAY --- */}
       {/* Only show this div if character is null */}
       {!character && (
-        <div style={{
-          position: 'absolute', 
-          top: 0, left: 0, width: '100%', height: '100%', 
-          zIndex: 10, 
-          background: 'rgba(0,0,0,0.8)', 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center',
-          color: 'white'
-        }}>
-          <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div className="character-menu">
+          <div className="character-options" aria-label="Choose a character">
             {characterCards.map((card) => (
-              <div
+              <button
+                type="button"
                 key={card.id}
                 onClick={() => setCharacter(card.id)}
-                style={{
-                  cursor: 'pointer',
-                  background: `linear-gradient(160deg, ${card.colors[0]}, white 58%)`,
-                  padding: '12px',
-                  borderRadius: '14px',
-                  textAlign: 'center',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  boxShadow: `0 0 0 4px ${card.colors[1]}55, 0 14px 32px rgba(0,0,0,0.32)`
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.05)'
-                  e.currentTarget.style.boxShadow = `0 0 0 5px ${card.colors[1]}99, 0 18px 36px rgba(0,0,0,0.42)`
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.0)'
-                  e.currentTarget.style.boxShadow = `0 0 0 4px ${card.colors[1]}55, 0 14px 32px rgba(0,0,0,0.32)`
-                }}
+                className="character-option"
               >
-                <pre
-                  aria-label={`${card.label} text art portrait`}
-                  style={{
-                    width: '150px',
-                    height: '150px',
-                    margin: 0,
-                    borderRadius: '8px',
-                    background: '#111827',
-                    color: card.colors[1],
-                    display: 'grid',
-                    placeItems: 'center',
-                    overflow: 'hidden',
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace',
-                    fontVariantLigatures: 'none',
-                    textAlign: 'center',
-                    transform: 'rotate(0deg)',
-                    fontSize: card.id === 'frog' ? '22px' : '25px',
-                    lineHeight: 1.05,
-                    whiteSpace: 'pre',
-                    textShadow: `0 0 10px ${card.colors[1]}`
-                  }}
-                >
-                  {card.art}
-                </pre>
-              </div>
+                {card.label}
+              </button>
             ))}
           </div>
         </div>
@@ -410,18 +338,46 @@ function SolidWorksSandbox({ onExit }) {
 }
 
 const cameraPhotoSlots = [
-  { number: '01', title: 'Front', note: 'A straight-on portrait of the camera' },
-  { number: '02', title: 'Profile', note: 'The camera from either side' },
-  { number: '03', title: 'In hand', note: 'A sense of scale and use' },
+  {
+    number: '01',
+    image: '/images/camcorder/camera-outside-01.jpg',
+    alt: 'Sony Handycam held outside with its viewfinder raised'
+  },
+  {
+    number: '02',
+    image: '/images/camcorder/camera-outside-02.jpg',
+    alt: 'Front view of a Sony Handycam held outside'
+  },
+  {
+    number: '03',
+    image: '/images/camcorder/camera-outside-03.jpg',
+    alt: 'Side view of a Sony Handycam held outside'
+  },
   {
     number: '04',
-    title: 'Inside the camera',
-    note: 'A work-in-progress view of the circuitry, wiring, and lens',
-    image: '/images/camcorder/camera-internals.svg',
-    alt: 'An opened camcorder held in one hand, showing its circuit board, wiring, and lens'
+    image: '/images/camcorder/camera-outside-04.jpg',
+    alt: 'Sony Handycam carried by its hand strap'
   },
-  { number: '05', title: 'Viewfinder', note: 'A look through the camera' },
-  { number: '06', title: 'In the wild', note: 'The camcorder out on a shoot' }
+  {
+    number: '05',
+    image: '/images/camcorder/camera-inside-01.jpg',
+    alt: 'Open camcorder showing circuit boards and wiring'
+  },
+  {
+    number: '06',
+    image: '/images/camcorder/camera-inside-02.jpg',
+    alt: 'Open tape mechanism held in one hand'
+  },
+  {
+    number: '07',
+    image: '/images/camcorder/camera-inside-03.jpg',
+    alt: 'Modified Sony Handycam with the side cover removed'
+  },
+  {
+    number: '08',
+    image: '/images/camcorder/camera-internals.svg',
+    alt: 'Camcorder internals showing circuit boards, wiring, and lens'
+  }
 ];
 
 function CamcorderProject({ onExit }) {
@@ -435,43 +391,53 @@ function CamcorderProject({ onExit }) {
       </nav>
 
       <header className="camcorder-header">
-        <p className="eyebrow">Personal documentation / ongoing</p>
+        <p className="eyebrow">Personal documentation</p>
         <h1>CAMCORDER<br />PROJECT</h1>
         <p className="camcorder-intro">
-          A home for photographs of my camera, its details, and the places it goes.
-          Images will be added here as the project develops.
+          250 hours of stupid ideas from Jan 2026 to July 2026.
         </p>
       </header>
 
       <section className="photo-grid" aria-label="Camcorder photo locations">
         {cameraPhotoSlots.map((slot) => (
           <article className="photo-slot" key={slot.number}>
-            {slot.image ? (
-              <figure className="photo-frame">
-                <img className="camcorder-photo" src={slot.image} alt={slot.alt} />
-                <span className="photo-number" aria-hidden="true">PHOTO {slot.number}</span>
-              </figure>
-            ) : (
-              <div className="photo-placeholder" aria-label={`${slot.title} photo placeholder`}>
-                <span className="frame-corner frame-corner-top" />
-                <span className="placeholder-cross" aria-hidden="true">+</span>
-                <span>PHOTO {slot.number}</span>
-                <span className="frame-corner frame-corner-bottom" />
-              </div>
-            )}
-            <div className="photo-caption">
-              <h2>{slot.title}</h2>
-              <p>{slot.note}</p>
-            </div>
+            <figure className="photo-frame">
+              <img
+                className="camcorder-photo"
+                src={slot.image}
+                alt={slot.alt}
+                onError={(event) => { event.currentTarget.hidden = true; }}
+              />
+              <span className="photo-number" aria-hidden="true">PHOTO {slot.number}</span>
+            </figure>
           </article>
         ))}
       </section>
 
+      <section className="video-grid" aria-label="Camcorder video locations">
+        <CamcorderVideo label="FOOTAGE" src={camcorderVideos.footage} />
+        <CamcorderVideo label="CAD VIDEO" src={camcorderVideos.cad} />
+      </section>
+
       <footer className="camcorder-footer">
-        <span>More footage soon.</span>
+        <span>Camcorder Project</span>
         <span>© {new Date().getFullYear()}</span>
       </footer>
     </main>
+  );
+}
+
+function CamcorderVideo({ label, src }) {
+  if (!src) {
+    return <div className="video-placeholder">{label}</div>;
+  }
+
+  return (
+    <figure className="video-frame">
+      <video controls playsInline preload="metadata" aria-label={label}>
+        <source src={src} type="video/mp4" />
+      </video>
+    </figure>
   );
 }
 
@@ -493,7 +459,7 @@ function StartupMenu({ onSelect }) {
             <span className="option-number">01</span>
             <span className="option-copy">
               <strong>Camcorder Project</strong>
-              <small>Photographs, details &amp; field notes</small>
+              <small>Camera build and footage</small>
             </span>
             <span className="option-arrow" aria-hidden="true">↗</span>
           </button>
