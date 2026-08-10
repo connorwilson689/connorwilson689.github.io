@@ -8,7 +8,7 @@ export const camcorderVideos = {
     type: 'video/mp4'
   },
   external: {
-    src: '/videos/camcorder/external-footage.mp4',
+    src: 'https://pub-27f889cb448f4fa49aa8594609bc3cf2.r2.dev/camcorder/external-footage.mp4',
     type: 'video/mp4'
   }
 };
