@@ -1,7 +1,7 @@
-import { Canvas } from '@react-three/fiber';
-import { Physics } from '@react-three/rapier';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Physics, useAfterPhysicsStep, useBeforePhysicsStep, useRapier } from '@react-three/rapier';
 import { KeyboardControls, Sky, Stars, Cloud } from '@react-three/drei';
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import Experience from './Experience';
 import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
@@ -32,6 +32,157 @@ const characterCards = [
   { id: 'rolly', label: 'Rolly Bike' }
 ];
 
+const PERFORMANCE_SAMPLE_SECONDS = 0.5;
+
+function SandboxPerformanceProbe({ onSample }) {
+  const { gl, scene } = useThree();
+  const { world } = useRapier();
+  const sample = useRef({
+    frames: 0,
+    elapsed: 0,
+    worstFrameMs: 0,
+    drawCalls: 0,
+    triangles: 0,
+    physicsMs: 0,
+    physicsSteps: 0
+  });
+  const physicsStartedAt = useRef(null);
+  const resetOnNextFrame = useRef(true);
+
+  useEffect(() => {
+    const resetAfterVisibilityChange = () => {
+      resetOnNextFrame.current = true;
+    };
+
+    document.addEventListener('visibilitychange', resetAfterVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', resetAfterVisibilityChange);
+  }, []);
+
+  useBeforePhysicsStep(() => {
+    physicsStartedAt.current = window.performance.now();
+  });
+
+  useAfterPhysicsStep(() => {
+    if (physicsStartedAt.current === null) return;
+    sample.current.physicsMs += window.performance.now() - physicsStartedAt.current;
+    sample.current.physicsSteps += 1;
+    physicsStartedAt.current = null;
+  });
+
+  useFrame((_, delta) => {
+    if (document.hidden) return;
+
+    if (resetOnNextFrame.current) {
+      sample.current = {
+        frames: 0,
+        elapsed: 0,
+        worstFrameMs: 0,
+        drawCalls: 0,
+        triangles: 0,
+        physicsMs: 0,
+        physicsSteps: 0
+      };
+      resetOnNextFrame.current = false;
+      return;
+    }
+
+    const current = sample.current;
+    const frameMs = delta * 1000;
+    current.frames += 1;
+    current.elapsed += delta;
+    current.worstFrameMs = Math.max(current.worstFrameMs, frameMs);
+    current.drawCalls += gl.info.render.calls;
+    current.triangles += gl.info.render.triangles;
+
+    if (current.elapsed < PERFORMANCE_SAMPLE_SECONDS) return;
+
+    let visibleMeshes = 0;
+    scene.traverseVisible((object) => {
+      if (object.isMesh) visibleMeshes += 1;
+    });
+
+    const browserMemory = window.performance.memory;
+    onSample({
+      fps: current.frames / current.elapsed,
+      averageFrameMs: (current.elapsed * 1000) / current.frames,
+      worstFrameMs: current.worstFrameMs,
+      drawCalls: current.drawCalls / current.frames,
+      triangles: current.triangles / current.frames,
+      visibleMeshes,
+      geometries: gl.info.memory.geometries,
+      textures: gl.info.memory.textures,
+      renderWidth: gl.domElement.width,
+      renderHeight: gl.domElement.height,
+      pixelRatio: gl.getPixelRatio(),
+      physicsMs: current.physicsMs / current.frames,
+      physicsSteps: current.physicsSteps,
+      rigidBodies: world.bodies.len(),
+      colliders: world.colliders.len(),
+      heapMb: browserMemory ? browserMemory.usedJSHeapSize / 1048576 : null
+    });
+
+    sample.current = {
+      frames: 0,
+      elapsed: 0,
+      worstFrameMs: 0,
+      drawCalls: 0,
+      triangles: 0,
+      physicsMs: 0,
+      physicsSteps: 0
+    };
+  });
+
+  return null;
+}
+
+function PerformanceReadout({ stats }) {
+  if (!stats) return <p className="performance-waiting">Sampling...</p>;
+
+  const count = (value) => Math.round(value).toLocaleString();
+  const decimal = (value) => value.toFixed(1);
+
+  return (
+    <div className="performance-readout">
+      <div className="performance-group">
+        <strong>Frame</strong>
+        <dl>
+          <div><dt>FPS</dt><dd>{count(stats.fps)}</dd></div>
+          <div><dt>Average</dt><dd>{decimal(stats.averageFrameMs)} ms</dd></div>
+          <div><dt>Worst</dt><dd>{decimal(stats.worstFrameMs)} ms</dd></div>
+        </dl>
+      </div>
+      <div className="performance-group">
+        <strong>Render</strong>
+        <dl>
+          <div><dt>Draw calls</dt><dd>{count(stats.drawCalls)}</dd></div>
+          <div><dt>Triangles</dt><dd>{count(stats.triangles)}</dd></div>
+          <div><dt>Visible meshes</dt><dd>{count(stats.visibleMeshes)}</dd></div>
+          <div><dt>Buffer</dt><dd>{stats.renderWidth} × {stats.renderHeight}</dd></div>
+          <div><dt>Pixel ratio</dt><dd>{stats.pixelRatio.toFixed(2)}</dd></div>
+        </dl>
+      </div>
+      <div className="performance-group">
+        <strong>Physics</strong>
+        <dl>
+          <div><dt>Time / frame</dt><dd>{decimal(stats.physicsMs)} ms</dd></div>
+          <div><dt>Steps / sample</dt><dd>{count(stats.physicsSteps)}</dd></div>
+          <div><dt>Bodies</dt><dd>{count(stats.rigidBodies)}</dd></div>
+          <div><dt>Colliders</dt><dd>{count(stats.colliders)}</dd></div>
+        </dl>
+      </div>
+      <div className="performance-group">
+        <strong>Memory</strong>
+        <dl>
+          <div><dt>Geometries</dt><dd>{count(stats.geometries)}</dd></div>
+          <div><dt>Textures</dt><dd>{count(stats.textures)}</dd></div>
+          <div><dt>JS heap</dt><dd>{stats.heapMb === null ? '—' : `${count(stats.heapMb)} MB`}</dd></div>
+        </dl>
+      </div>
+      <p className="performance-note">Exact object and script timing still needs the browser profiler.</p>
+    </div>
+  );
+}
+
 function SolidWorksSandbox({ onExit }) {
   const [character, setCharacter] = useState(null);
   
@@ -44,6 +195,8 @@ function SolidWorksSandbox({ onExit }) {
   const [cameraSensitivity, setCameraSensitivity] = useState(1.6);
   const [showFallMessage, setShowFallMessage] = useState(false);
   const [loopingThoughts, setLoopingThoughts] = useState([]);
+  const [showPerformance, setShowPerformance] = useState(false);
+  const [performanceStats, setPerformanceStats] = useState(null);
 
   const thoughtMessages = useMemo(() => ([
     'where was I going again?',
@@ -146,8 +299,8 @@ function SolidWorksSandbox({ onExit }) {
         />
       </div>
 {/* 2. JUMP BUTTON (Right) - FAKE SPACEBAR MODE */}
-      <div 
-        style={{ 
+      <div
+        style={{
             position: 'absolute', bottom: 60, right: 60, zIndex: 99999,
             width: 80, height: 80, borderRadius: '50%',
             backgroundColor: 'rgba(200, 50, 50, 0.8)', border: '4px solid white',
@@ -173,7 +326,7 @@ function SolidWorksSandbox({ onExit }) {
         <span style={{color: 'white', fontWeight: 'bold', pointerEvents: 'none'}}>JUMP</span>
       </div>
 
-      
+
       <div
         style={{
           position: 'absolute',
@@ -197,6 +350,7 @@ function SolidWorksSandbox({ onExit }) {
 
 
       <div
+        className="sandbox-settings"
         style={{
           position: 'absolute',
           top: 16,
@@ -210,7 +364,9 @@ function SolidWorksSandbox({ onExit }) {
           fontSize: '12px',
           letterSpacing: '0.3px',
           textAlign: 'left',
-          userSelect: 'none'
+          userSelect: 'none',
+          maxHeight: 'calc(100vh - 32px)',
+          overflowY: 'auto'
         }}
       >
         <label
@@ -258,6 +414,21 @@ function SolidWorksSandbox({ onExit }) {
           <span>gentle</span>
           <span>quick</span>
         </div>
+
+        <button
+          type="button"
+          className="performance-toggle"
+          aria-expanded={showPerformance}
+          onClick={() => {
+            setPerformanceStats(null);
+            setShowPerformance((current) => !current);
+          }}
+        >
+          <span>Performance</span>
+          <span>{showPerformance ? 'close' : 'open'}</span>
+        </button>
+
+        {showPerformance && <PerformanceReadout stats={performanceStats} />}
       </div>
 
       {/* --- THE HTML MENU OVERLAY --- */}
@@ -322,6 +493,7 @@ function SolidWorksSandbox({ onExit }) {
         
         {/* use this to see physics boxes: <Physics debug> */}
         <Physics>
+          {showPerformance && <SandboxPerformanceProbe onSample={setPerformanceStats} />}
           <Suspense fallback={null}>
             {/* Pass the chosen character down after selection; Experience delays spawning. */}
             <Experience
@@ -403,16 +575,22 @@ function CamcorderProject({ onExit }) {
         <button type="button" onClick={onExit} className="text-button">
           <span aria-hidden="true">&larr;</span> All projects
         </button>
-        <span>Camcorder Project / Archive</span>
+        <span>4K Boombox with CRT display / Archive</span>
       </nav>
 
       <header className="camcorder-header">
         <p className="eyebrow">Personal documentation</p>
-        <h1>CAMCORDER<br />PROJECT</h1>
+        <h1>4K Boombox with CRT display</h1>
         <p className="camcorder-intro">
-          250 hours of stupid ideas from Jan 2026 to July 2026.
+          250 hours of bad ideas from Jan 2026 to July 2026.
         </p>
       </header>
+
+      <section className="video-grid" aria-label="Project videos">
+        <CamcorderVideo label="footage" {...camcorderVideos.footage} />
+        <CamcorderVideo label="cad" {...camcorderVideos.cad} />
+        <CamcorderVideo label="custom cassette deck mechanics" {...camcorderVideos.external} />
+      </section>
 
       <section className="photo-grid" aria-label="Camcorder photo locations">
         {cameraPhotoSlots.map((slot) => (
@@ -433,14 +611,24 @@ function CamcorderProject({ onExit }) {
         ))}
       </section>
 
-      <section className="video-grid" aria-label="Camcorder video locations">
-        <CamcorderVideo label="FOOTAGE" {...camcorderVideos.footage} />
-        <CamcorderVideo label="CAD VIDEO" {...camcorderVideos.cad} />
-        <CamcorderVideo label="EXTERNAL FOOTAGE" {...camcorderVideos.external} />
+      <section className="build-summary" aria-labelledby="build-summary-title">
+        <p className="eyebrow">Build summary</p>
+        <h2 id="build-summary-title">Parts + cost</h2>
+        <ul className="parts-list">
+          <li><span>Broken GoPro HERO4 with Sony Exmor CMOS sensor</span><span>$10.00</span></li>
+          <li><span>Canovision 8 lens</span><span>$2.00</span></li>
+          <li><span>Sony Handycam shell with CRT display for GoPro composite feed</span><span>$6.00</span></li>
+          <li><span>Karaoke machine cassette deck parts and radio</span><span>$3.00</span></li>
+          <li><span>Sony microcassette speaker</span><span>$1.50</span></li>
+          <li><span>Audio amplifier</span><span>$2.00</span></li>
+          <li><span>Broken handwarmer power bank</span><span>$0.50</span></li>
+          <li><span>Mini USB connector, USB connector, old Apple Earbuds microphone, GA-Tech 3D-print materials, wires, and glue</span><span>Free</span></li>
+        </ul>
+        <p className="build-total"><span>Total</span><strong>$25.00</strong></p>
       </section>
 
       <footer className="camcorder-footer">
-        <span>Camcorder Project</span>
+        <span>4K Boombox with CRT display</span>
         <span>© {new Date().getFullYear()}</span>
       </footer>
     </main>
@@ -454,6 +642,7 @@ function CamcorderVideo({ label, src, type }) {
 
   return (
     <figure className="video-frame">
+      <figcaption className="video-label">{label}</figcaption>
       <video controls playsInline preload="metadata" aria-label={label}>
         <source src={src} type={type} />
         <a href={src}>Open the {label.toLowerCase()} file.</a>
@@ -479,7 +668,7 @@ function StartupMenu({ onSelect }) {
           <button type="button" className="project-option camcorder-option" onClick={() => onSelect('camcorder')}>
             <span className="option-number">01</span>
             <span className="option-copy">
-              <strong>Camcorder Project</strong>
+              <strong>4K Boombox with CRT display</strong>
               <small>Camera build and footage</small>
             </span>
             <span className="option-arrow" aria-hidden="true">↗</span>
