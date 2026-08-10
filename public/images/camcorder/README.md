@@ -1,6 +1,6 @@
 # Camcorder photo files
 
-The gallery expects the supplied photographs at these exact paths:
+The deployed gallery uses these browser-friendly JPEG files:
 
 - `camera-outside-01.jpg`
 - `camera-outside-02.jpg`
@@ -9,7 +9,8 @@ The gallery expects the supplied photographs at these exact paths:
 - `camera-inside-01.jpg`
 - `camera-inside-02.jpg`
 - `camera-inside-03.jpg`
+- `camera-inside-04.jpg`
 
-They are intentionally kept out of the automated pull request because its
-review channel does not accept binary patches. Add the original files from a
-local Git checkout after this pull request has been merged.
+They were converted from the uploaded HEIC originals, resized for the web, and
+stripped of embedded metadata. Keep future camera originals outside the
+deployed site and add optimized JPEG copies here.

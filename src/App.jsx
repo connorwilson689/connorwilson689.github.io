@@ -341,42 +341,58 @@ const cameraPhotoSlots = [
   {
     number: '01',
     image: '/images/camcorder/camera-outside-01.jpg',
-    alt: 'Sony Handycam held outside with its viewfinder raised'
+    alt: 'Sony Handycam held outside with its viewfinder raised',
+    width: 1650,
+    height: 2200
   },
   {
     number: '02',
     image: '/images/camcorder/camera-outside-02.jpg',
-    alt: 'Front view of a Sony Handycam held outside'
+    alt: 'Side view of a Sony Handycam held outside',
+    width: 1650,
+    height: 2200
   },
   {
     number: '03',
     image: '/images/camcorder/camera-outside-03.jpg',
-    alt: 'Side view of a Sony Handycam held outside'
+    alt: 'Sony Handycam carried outside by its hand strap',
+    width: 1650,
+    height: 2200
   },
   {
     number: '04',
     image: '/images/camcorder/camera-outside-04.jpg',
-    alt: 'Sony Handycam carried by its hand strap'
+    alt: 'Rear view of a Sony Handycam held outside',
+    width: 1650,
+    height: 2200
   },
   {
     number: '05',
     image: '/images/camcorder/camera-inside-01.jpg',
-    alt: 'Open camcorder showing circuit boards and wiring'
+    alt: 'Open camcorder showing its circuit board, wiring, and replacement lens',
+    width: 1650,
+    height: 2200
   },
   {
     number: '06',
     image: '/images/camcorder/camera-inside-02.jpg',
-    alt: 'Open tape mechanism held in one hand'
+    alt: 'Side view of the modified Sony Handycam and replacement lens',
+    width: 2200,
+    height: 1650
   },
   {
     number: '07',
     image: '/images/camcorder/camera-inside-03.jpg',
-    alt: 'Modified Sony Handycam with the side cover removed'
+    alt: 'Open tape compartment and mechanism inside the Sony Handycam',
+    width: 1650,
+    height: 2200
   },
   {
     number: '08',
-    image: '/images/camcorder/camera-internals.svg',
-    alt: 'Camcorder internals showing circuit boards, wiring, and lens'
+    image: '/images/camcorder/camera-inside-04.jpg',
+    alt: 'Close view of wiring and circuit boards inside the open camcorder',
+    width: 1650,
+    height: 2200
   }
 ];
 
@@ -406,7 +422,10 @@ function CamcorderProject({ onExit }) {
                 className="camcorder-photo"
                 src={slot.image}
                 alt={slot.alt}
-                onError={(event) => { event.currentTarget.hidden = true; }}
+                width={slot.width}
+                height={slot.height}
+                loading={slot.number === '01' ? 'eager' : 'lazy'}
+                decoding="async"
               />
               <span className="photo-number" aria-hidden="true">PHOTO {slot.number}</span>
             </figure>
@@ -437,6 +456,7 @@ function CamcorderVideo({ label, src, type }) {
     <figure className="video-frame">
       <video controls playsInline preload="metadata" aria-label={label}>
         <source src={src} type={type} />
+        <a href={src}>Open the {label.toLowerCase()} file.</a>
       </video>
     </figure>
   );
