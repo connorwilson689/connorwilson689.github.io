@@ -6,6 +6,7 @@ import Experience from './Experience';
 import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
 import { camcorderVideos } from './media';
+import { profile } from './profile';
 import './App.css';
 
 // 1. Define your keyboard map
@@ -651,19 +652,115 @@ function CamcorderVideo({ label, src, type }) {
   );
 }
 
+function ProfileDrawer({ open, onClose, triggerRef }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (open && !dialog.open) dialog.showModal();
+    if (!open && dialog.open) dialog.close();
+  }, [open]);
+
+  const closeDialog = () => dialogRef.current?.close();
+
+  return (
+    <dialog
+      id="profile-dialog"
+      ref={dialogRef}
+      className="profile-dialog"
+      aria-labelledby="profile-title"
+      onClose={() => {
+        onClose();
+        triggerRef.current?.focus();
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) closeDialog();
+      }}
+    >
+      <div className="profile-drawer">
+        <header className="profile-drawer-header">
+          <span>Profile / Contact</span>
+          <button type="button" className="profile-close" onClick={closeDialog}>Close</button>
+        </header>
+
+        <figure className={`profile-portrait${profile.portraitSrc ? '' : ' profile-portrait-empty'}`}>
+          {profile.portraitSrc ? (
+            <img
+              src={profile.portraitSrc}
+              alt={profile.portraitAlt || 'Profile portrait'}
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <span>Portrait</span>
+          )}
+        </figure>
+
+        <section className="profile-details">
+          <p className="eyebrow">Personal details</p>
+          <h2 id="profile-title">{profile.name || 'Profile'}</h2>
+          <div className="profile-links">
+            {profile.contactHref ? (
+              <a className="profile-link" href={profile.contactHref}>
+                <span>{profile.contactLabel || 'Contact'}</span>
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+            ) : (
+              <span className="profile-link profile-link-empty">
+                <span>Contact</span>
+                <span aria-hidden="true">&mdash;</span>
+              </span>
+            )}
+
+            {profile.linkedInHref ? (
+              <a
+                className="profile-link"
+                href={profile.linkedInHref}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span>LinkedIn</span>
+                <span aria-hidden="true">&nearr;</span>
+              </a>
+            ) : (
+              <span className="profile-link profile-link-empty">
+                <span>LinkedIn</span>
+                <span aria-hidden="true">&mdash;</span>
+              </span>
+            )}
+          </div>
+        </section>
+      </div>
+    </dialog>
+  );
+}
+
 function StartupMenu({ onSelect }) {
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileTriggerRef = useRef(null);
+
   return (
     <main className="startup-menu">
       <div className="startup-grain" aria-hidden="true" />
       <header className="startup-header">
-        <span className="startup-mark">CW</span>
-        <span>PROJECT INDEX</span>
-        <span>SELECT A WORLD</span>
+        <button
+          ref={profileTriggerRef}
+          type="button"
+          className="startup-mark"
+          aria-label="Open profile and contact"
+          aria-haspopup="dialog"
+          aria-expanded={profileOpen}
+          aria-controls="profile-dialog"
+          onClick={() => setProfileOpen(true)}
+        >
+          CW
+        </button>
       </header>
 
       <section className="startup-content">
-        <p className="eyebrow">Choose a project to enter</p>
-        <h1>WHERE TO?</h1>
+        <h1>THERE,<br />SLOW DREAMER</h1>
         <div className="project-options">
           <button type="button" className="project-option camcorder-option" onClick={() => onSelect('camcorder')}>
             <span className="option-number">01</span>
@@ -686,8 +783,13 @@ function StartupMenu({ onSelect }) {
 
       <footer className="startup-footer">
         <span>Connor Wilson</span>
-        <span>Use mouse / touch to select</span>
       </footer>
+
+      <ProfileDrawer
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        triggerRef={profileTriggerRef}
+      />
     </main>
   );
 }
