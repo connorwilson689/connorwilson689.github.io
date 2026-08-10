@@ -1,5 +1,14 @@
-// Paste the public Cloudflare R2 URLs here after uploading the video masters.
 export const camcorderVideos = {
-  footage: '',
-  cad: ''
+  footage: {
+    src: 'https://pub-27f889cb448f4fa49aa8594609bc3cf2.r2.dev/camcorder/footage.mp4',
+    type: 'video/mp4'
+  },
+  cad: {
+    src: 'https://pub-27f889cb448f4fa49aa8594609bc3cf2.r2.dev/camcorder/cad-video.mp4',
+    type: 'video/mp4'
+  },
+  external: {
+    src: 'https://pub-27f889cb448f4fa49aa8594609bc3cf2.r2.dev/camcorder/external-footage.mp4',
+    type: 'video/mp4'
+  }
 };
