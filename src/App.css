@@ -55,6 +55,7 @@ button { font: inherit; }
   letter-spacing: .1em;
   text-transform: uppercase;
 }
+.startup-header { justify-content: flex-start; }
 
 .startup-mark {
   display: grid;
@@ -63,9 +64,67 @@ button { font: inherit; }
   height: 38px;
   border: 1px solid currentColor;
   border-radius: 50%;
+  padding: 0;
+  background: transparent;
+  color: inherit;
   font-weight: 500;
   letter-spacing: 0;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease;
 }
+.startup-mark:hover { background: #151512; color: #f0eee7; }
+.startup-mark:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+
+.profile-dialog {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(430px, calc(100vw - 40px));
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid #151512;
+  background: #f0eee7;
+  color: #151512;
+}
+.profile-dialog::backdrop { background: rgba(21, 21, 18, .58); backdrop-filter: blur(2px); }
+.profile-drawer { min-height: 100%; padding: 26px 28px 30px; display: flex; flex-direction: column; }
+.profile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: 11px/1 'DM Mono', monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.profile-close { border: 0; background: transparent; color: inherit; padding: 8px 0; cursor: pointer; text-transform: uppercase; letter-spacing: inherit; }
+.profile-close:hover { opacity: .55; }
+.profile-close:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.profile-portrait { margin: 40px 0 30px; aspect-ratio: 4 / 5; overflow: hidden; background: #d8d5cb; }
+.profile-portrait img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.profile-portrait-empty { display: grid; place-items: center; border: 1px solid #aaa99f; color: #696962; }
+.profile-portrait-empty span { font: 10px/1 'DM Mono', monospace; letter-spacing: .16em; text-transform: uppercase; }
+.profile-details { margin-top: auto; }
+.profile-details .eyebrow { margin: 0 0 10px; }
+.profile-details h2 { margin: 0 0 28px; font-size: clamp(44px, 10vw, 68px); line-height: .85; letter-spacing: -.065em; text-transform: uppercase; }
+.profile-links { border-top: 1px solid #151512; }
+.profile-link {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #151512;
+  color: inherit;
+  font: 11px/1.3 'DM Mono', monospace;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+a.profile-link:hover, a.profile-link:focus-visible { padding-inline: 10px; background: #151512; color: #f0eee7; outline: none; }
+.profile-link-empty { color: #696962; }
 
 .startup-content {
   position: relative;
@@ -84,10 +143,10 @@ button { font: inherit; }
 
 .startup-content > h1 {
   margin: 0 0 42px;
-  font-size: clamp(76px, 12vw, 174px);
+  font-size: clamp(46px, 9vw, 148px);
   font-weight: 800;
   letter-spacing: -.085em;
-  line-height: .72;
+  line-height: .76;
 }
 
 .project-options { border-top: 1px solid #151512; }
@@ -136,10 +195,10 @@ button { font: inherit; }
 .text-button:hover { opacity: .55; }
 .camcorder-header { display: grid; grid-template-columns: 1fr 380px; gap: 30px; padding: 72px 0 76px; align-items: end; }
 .camcorder-header .eyebrow { grid-column: 1 / -1; margin: 0; }
-.camcorder-header h1 { font-size: clamp(66px, 11vw, 156px); line-height: .77; letter-spacing: -.075em; margin: 0; }
+.camcorder-header h1 { font-size: clamp(48px, 8vw, 116px); line-height: .82; letter-spacing: -.075em; margin: 0; }
 .camcorder-intro { max-width: 370px; font-size: 18px; line-height: 1.5; letter-spacing: -.02em; }
-.photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 70px 22px; }
-.photo-slot:nth-child(3n) { grid-column: 1 / -1; width: 68%; margin-left: auto; }
+.photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 70px 22px; margin-top: 100px; }
+.photo-slot:nth-child(3n) { grid-column: 1 / -1; width: 68%; margin-inline: auto; }
 .photo-frame {
   position: relative;
   margin: 0;
@@ -160,7 +219,7 @@ button { font: inherit; }
 }
 .camcorder-footer { border-top: 1px solid; margin-top: 100px; padding-top: 22px; }
 
-.video-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 70px; }
+.video-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 .video-placeholder {
   aspect-ratio: 16 / 9;
   display: grid;
@@ -170,10 +229,27 @@ button { font: inherit; }
   font: 10px/1 'DM Mono', monospace;
   letter-spacing: .16em;
 }
-.video-frame { margin: 0; background: #1b1b18; display: flex; justify-content: center; }
+.video-frame { margin: 0; background: #1b1b18; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .video-frame:nth-child(3) { grid-column: 1 / -1; }
+.video-label {
+  align-self: stretch;
+  padding: 10px 12px;
+  color: #f0eee7;
+  font: 10px/1.3 'DM Mono', monospace;
+  letter-spacing: .14em;
+}
 .video-frame video { width: 100%; height: auto; display: block; object-fit: contain; }
 .video-frame:nth-child(3) video { width: auto; max-width: 100%; max-height: 80vh; }
+
+.build-summary { margin-top: 100px; border-top: 1px solid; padding-top: 22px; }
+.build-summary .eyebrow { margin: 0 0 22px; }
+.build-summary h2 { margin: 0 0 40px; font-size: clamp(40px, 6vw, 82px); line-height: .9; letter-spacing: -.06em; }
+.parts-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid #aaa99f; }
+.parts-list li, .build-total { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; }
+.parts-list li { padding: 14px 0; border-bottom: 1px solid #aaa99f; line-height: 1.4; }
+.parts-list li span:last-child { white-space: nowrap; font-family: 'DM Mono', monospace; font-size: 12px; }
+.build-total { margin: 0; padding-top: 20px; font-size: 22px; }
+.build-total strong { font-family: 'DM Mono', monospace; }
 
 .character-menu {
   position: absolute;
@@ -208,22 +284,53 @@ button { font: inherit; }
   backdrop-filter: blur(8px);
 }
 
+.performance-toggle {
+  width: 100%;
+  margin-top: 14px;
+  padding: 8px 0 0;
+  display: flex;
+  justify-content: space-between;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, .28);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: 10px/1.4 'DM Mono', monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.performance-waiting { margin: 14px 0 0; opacity: .72; font-family: 'DM Mono', monospace; }
+.performance-readout { margin-top: 14px; font-family: 'DM Mono', monospace; }
+.performance-group + .performance-group { margin-top: 12px; }
+.performance-group > strong { display: block; margin-bottom: 4px; color: #ffd18f; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
+.performance-group dl { margin: 0; }
+.performance-group dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+.performance-group dt { opacity: .72; }
+.performance-group dd { margin: 0; white-space: nowrap; }
+.performance-note { margin: 14px 0 0; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .18); opacity: .62; font-size: 9px; line-height: 1.5; }
+
 @media (max-width: 700px) {
   .startup-menu, .camcorder-page { padding: 20px; }
-  .startup-header span:nth-child(2) { display: none; }
   .startup-content { width: 100%; }
-  .startup-content > h1 { margin-bottom: 34px; }
+  .startup-content > h1 { margin-bottom: 34px; font-size: clamp(40px, 12vw, 54px); }
   .project-option { min-height: 118px; grid-template-columns: 40px 1fr auto; padding-right: 4px; }
   .option-copy small { max-width: 210px; line-height: 1.5; }
-  .startup-footer span:last-child, .camcorder-nav > span { display: none; }
+  .camcorder-nav > span { display: none; }
   .camcorder-header { grid-template-columns: 1fr; padding: 54px 0; }
   .camcorder-header .eyebrow { grid-column: auto; }
   .camcorder-intro { font-size: 15px; }
   .photo-grid { grid-template-columns: 1fr; gap: 48px; }
   .video-grid { grid-template-columns: 1fr; }
+  .video-frame:nth-child(3) { grid-column: auto; }
   .photo-slot:nth-child(3n) { grid-column: auto; width: 100%; }
+  .parts-list li, .build-total { gap: 16px; }
+}
+
+@media (max-width: 520px) {
+  .profile-dialog { width: 100%; border-right: 0; }
+  .profile-drawer { padding: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .project-option, .option-arrow { transition: none; }
+  .startup-mark, .project-option, .option-arrow { transition: none; }
 }
