@@ -3,7 +3,7 @@ import Ecctrl, { useJoystickControls } from 'ecctrl';
 import { useKeyboardControls, useGLTF } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { useEffect, useRef, useMemo, useState } from 'react'
+import { memo, useEffect, useLayoutEffect, useRef, useMemo, useState } from 'react'
 
 function Frog() {
   const { nodes, materials } = useGLTF('./frog.glb')
@@ -631,77 +631,193 @@ function CircuitSkyscraper({ position, height = 18, width = 5, color = '#18212c'
   )
 }
 
-// Border tiles are visual scenery. Keeping them out of Rapier removes more than 100
-// unnecessary static bodies from every physics step.
-function CircuitBoardTile({ position, rotation = [0, 0, 0], size = [18, 0.16, 14], index = 0 }) {
-  const accentColors = ['#6fffe9', '#8efc64', '#ffd24d', '#74c7ff']
-  const accent = accentColors[index % accentColors.length]
+// Border tiles are visual scenery. Spatial chunks retain camera culling while shared
+// instances preserve the full design with far fewer draw calls and scene objects.
+function StaticInstanceBatch({ geometry, material, matrices, castShadow = false, receiveShadow = false }) {
+  const meshRef = useRef()
+
+  useLayoutEffect(() => {
+    const mesh = meshRef.current
+    if (!mesh) return
+
+    mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage)
+    matrices.forEach((matrix, index) => mesh.setMatrixAt(index, matrix))
+    mesh.instanceMatrix.needsUpdate = true
+    mesh.computeBoundingBox()
+    mesh.computeBoundingSphere()
+  }, [matrices])
+
+  if (matrices.length === 0) return null
 
   return (
-    <group position={position} rotation={rotation}>
-        <mesh receiveShadow>
-          <boxGeometry args={size} />
-          <meshStandardMaterial color={index % 2 === 0 ? '#075b3a' : '#06492f'} roughness={0.64} metalness={0.15} />
-        </mesh>
-        {Array.from({ length: 6 }, (_, traceIndex) => (
-          <mesh key={`edge-trace-x-${index}-${traceIndex}`} position={[-6 + traceIndex * 2.4, 0.13, -2.8 + (traceIndex % 3) * 2.8]}>
-            <boxGeometry args={[3.4, 0.08, 0.22]} />
-            <meshStandardMaterial color="#d9af41" emissive="#896500" emissiveIntensity={0.35} />
-          </mesh>
-        ))}
-        {Array.from({ length: 5 }, (_, traceIndex) => (
-          <mesh key={`edge-trace-z-${index}-${traceIndex}`} position={[-5.2 + traceIndex * 2.6, 0.14, 2.6 - (traceIndex % 2) * 5.2]}>
-            <boxGeometry args={[0.22, 0.08, 4.8]} />
-            <meshStandardMaterial color="#d9af41" emissive="#896500" emissiveIntensity={0.35} />
-          </mesh>
-        ))}
-        {Array.from({ length: 4 }, (_, chipIndex) => (
-          <group key={`edge-chip-${index}-${chipIndex}`} position={[-5.6 + chipIndex * 3.7, 0.42, chipIndex % 2 === 0 ? 3.6 : -3.8]} rotation={[0, chipIndex * 0.35, 0]}>
-            <mesh castShadow receiveShadow>
-              <boxGeometry args={[2.1, 0.58, 1.65]} />
-              <meshStandardMaterial color="#171b24" />
-            </mesh>
-            <mesh castShadow position={[0, 0.38, 0]}>
-              <boxGeometry args={[1.15, 0.12, 0.75]} />
-              <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.75} />
-            </mesh>
-          </group>
-        ))}
-        {Array.from({ length: 10 }, (_, viaIndex) => (
-          <mesh key={`edge-via-${index}-${viaIndex}`} position={[-7.5 + viaIndex * 1.65, 0.16, viaIndex % 2 === 0 ? -5.2 : 5.1]}>
-            <cylinderGeometry args={[0.26, 0.26, 0.1, 12]} />
-            <meshStandardMaterial color="#e4c77d" emissive="#725206" emissiveIntensity={0.25} />
-          </mesh>
-        ))}
-      </group>
+    <instancedMesh
+      ref={meshRef}
+      args={[geometry, material, matrices.length]}
+      castShadow={castShadow}
+      receiveShadow={receiveShadow}
+      frustumCulled
+      matrixAutoUpdate={false}
+    />
   )
 }
 
+function createTransformMatrix(position, rotation = [0, 0, 0], scale = [1, 1, 1]) {
+  return new THREE.Matrix4().compose(
+    new THREE.Vector3(...position),
+    new THREE.Quaternion().setFromEuler(new THREE.Euler(...rotation)),
+    new THREE.Vector3(...scale)
+  )
+}
+
+function createBorderChunk(id, tiles) {
+  const batches = {
+    id,
+    baseEven: [],
+    baseOdd: [],
+    traces: [],
+    chipBodies: [],
+    chipTops: [[], [], [], []],
+    vias: []
+  }
+
+  tiles.forEach((tile) => {
+    const tileMatrix = createTransformMatrix(tile.position, tile.rotation)
+    const addTileTransform = (target, localMatrix) => {
+      target.push(tileMatrix.clone().multiply(localMatrix))
+    }
+
+    addTileTransform(
+      tile.index % 2 === 0 ? batches.baseEven : batches.baseOdd,
+      createTransformMatrix([0, 0, 0], [0, 0, 0], [18, 0.16, 14])
+    )
+
+    for (let traceIndex = 0; traceIndex < 6; traceIndex += 1) {
+      addTileTransform(
+        batches.traces,
+        createTransformMatrix(
+          [-6 + traceIndex * 2.4, 0.13, -2.8 + (traceIndex % 3) * 2.8],
+          [0, 0, 0],
+          [3.4, 0.08, 0.22]
+        )
+      )
+    }
+
+    for (let traceIndex = 0; traceIndex < 5; traceIndex += 1) {
+      addTileTransform(
+        batches.traces,
+        createTransformMatrix(
+          [-5.2 + traceIndex * 2.6, 0.14, 2.6 - (traceIndex % 2) * 5.2],
+          [0, 0, 0],
+          [0.22, 0.08, 4.8]
+        )
+      )
+    }
+
+    for (let chipIndex = 0; chipIndex < 4; chipIndex += 1) {
+      const chipMatrix = createTransformMatrix(
+        [-5.6 + chipIndex * 3.7, 0.42, chipIndex % 2 === 0 ? 3.6 : -3.8],
+        [0, chipIndex * 0.35, 0]
+      )
+      const chipWorldMatrix = tileMatrix.clone().multiply(chipMatrix)
+
+      batches.chipBodies.push(
+        chipWorldMatrix.clone().multiply(createTransformMatrix([0, 0, 0], [0, 0, 0], [2.1, 0.58, 1.65]))
+      )
+      batches.chipTops[tile.index % batches.chipTops.length].push(
+        chipWorldMatrix.clone().multiply(createTransformMatrix([0, 0.38, 0], [0, 0, 0], [1.15, 0.12, 0.75]))
+      )
+    }
+
+    for (let viaIndex = 0; viaIndex < 10; viaIndex += 1) {
+      addTileTransform(
+        batches.vias,
+        createTransformMatrix(
+          [-7.5 + viaIndex * 1.65, 0.16, viaIndex % 2 === 0 ? -5.2 : 5.1],
+          [0, 0, 0],
+          [0.26, 0.1, 0.26]
+        )
+      )
+    }
+  })
+
+  return batches
+}
+
 function CircuitBoardBorder() {
-  const borderTiles = useMemo(() => {
-    const tiles = []
-    for (let i = 0; i < 30; i += 1) {
-      const x = -252 + i * 17.4
-      tiles.push({ id: `north-board-${i}`, position: [x, -0.38, -209], rotation: [0, 0, 0], index: i })
-      tiles.push({ id: `south-board-${i}`, position: [x, -0.38, 209], rotation: [0, Math.PI, 0], index: i + 30 })
+  const chunks = useMemo(() => {
+    const north = []
+    const south = []
+    const west = []
+    const east = []
+
+    for (let index = 0; index < 30; index += 1) {
+      const x = -252 + index * 17.4
+      north.push({ position: [x, -0.38, -209], rotation: [0, 0, 0], index })
+      south.push({ position: [x, -0.38, 209], rotation: [0, Math.PI, 0], index: index + 30 })
     }
-    for (let i = 0; i < 24; i += 1) {
-      const z = -196 + i * 17
-      tiles.push({ id: `west-board-${i}`, position: [-259, -0.37, z], rotation: [0, Math.PI * 0.5, 0], index: i + 60 })
-      tiles.push({ id: `east-board-${i}`, position: [259, -0.37, z], rotation: [0, -Math.PI * 0.5, 0], index: i + 84 })
+    for (let index = 0; index < 24; index += 1) {
+      const z = -196 + index * 17
+      west.push({ position: [-259, -0.37, z], rotation: [0, Math.PI * 0.5, 0], index: index + 60 })
+      east.push({ position: [259, -0.37, z], rotation: [0, -Math.PI * 0.5, 0], index: index + 84 })
     }
-    return tiles
+
+    return [north, south, west, east].flatMap((side, sideIndex) => (
+      Array.from({ length: Math.ceil(side.length / 6) }, (_, chunkIndex) => (
+        createBorderChunk(`border-${sideIndex}-${chunkIndex}`, side.slice(chunkIndex * 6, chunkIndex * 6 + 6))
+      ))
+    ))
   }, [])
+
+  const resources = useMemo(() => {
+    const chipAccentColors = ['#6fffe9', '#8efc64', '#ffd24d', '#74c7ff']
+    const materials = {
+      baseEven: new THREE.MeshStandardMaterial({ color: '#075b3a', roughness: 0.64, metalness: 0.15 }),
+      baseOdd: new THREE.MeshStandardMaterial({ color: '#06492f', roughness: 0.64, metalness: 0.15 }),
+      traces: new THREE.MeshStandardMaterial({ color: '#d9af41', emissive: '#896500', emissiveIntensity: 0.35 }),
+      chipBodies: new THREE.MeshStandardMaterial({ color: '#171b24' }),
+      chipTops: chipAccentColors.map((accent) => (
+        new THREE.MeshStandardMaterial({ color: accent, emissive: accent, emissiveIntensity: 0.75 })
+      )),
+      vias: new THREE.MeshStandardMaterial({ color: '#e4c77d', emissive: '#725206', emissiveIntensity: 0.25 })
+    }
+
+    return {
+      boxGeometry: new THREE.BoxGeometry(1, 1, 1),
+      viaGeometry: new THREE.CylinderGeometry(1, 1, 1, 12),
+      materials
+    }
+  }, [])
+
+  useEffect(() => () => {
+    resources.boxGeometry.dispose()
+    resources.viaGeometry.dispose()
+    resources.materials.baseEven.dispose()
+    resources.materials.baseOdd.dispose()
+    resources.materials.traces.dispose()
+    resources.materials.chipBodies.dispose()
+    resources.materials.chipTops.forEach((material) => material.dispose())
+    resources.materials.vias.dispose()
+  }, [resources])
 
   return (
     <>
-      {borderTiles.map((tile) => (
-        <CircuitBoardTile
-          key={tile.id}
-            position={tile.position}
-          rotation={tile.rotation}
-          index={tile.index}
-        />
+      {chunks.map((chunk) => (
+        <group key={chunk.id}>
+          <StaticInstanceBatch geometry={resources.boxGeometry} material={resources.materials.baseEven} matrices={chunk.baseEven} receiveShadow />
+          <StaticInstanceBatch geometry={resources.boxGeometry} material={resources.materials.baseOdd} matrices={chunk.baseOdd} receiveShadow />
+          <StaticInstanceBatch geometry={resources.boxGeometry} material={resources.materials.traces} matrices={chunk.traces} />
+          <StaticInstanceBatch geometry={resources.boxGeometry} material={resources.materials.chipBodies} matrices={chunk.chipBodies} castShadow receiveShadow />
+          {chunk.chipTops.map((matrices, accentIndex) => (
+            <StaticInstanceBatch
+              key={`${chunk.id}-accent-${accentIndex}`}
+              geometry={resources.boxGeometry}
+              material={resources.materials.chipTops[accentIndex]}
+              matrices={matrices}
+              castShadow
+            />
+          ))}
+          <StaticInstanceBatch geometry={resources.viaGeometry} material={resources.materials.vias} matrices={chunk.vias} />
+        </group>
       ))}
     </>
   )
@@ -1299,6 +1415,8 @@ function TownLayout() {
   )
 }
 
+const MemoizedTownLayout = memo(TownLayout)
+
 const CHARACTER_SPAWN_POSITION = [0, 45, 0]
 const FALL_MESSAGE_HEIGHT = -8
 const RESPAWN_HEIGHT = -30
@@ -1380,7 +1498,7 @@ export default function Experience({ activeCharacter, onFallStateChange, cameraS
         </Ecctrl>
       )}
 
-      <TownLayout />
+      <MemoizedTownLayout />
     </>
   )
 }

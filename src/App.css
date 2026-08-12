@@ -102,28 +102,56 @@ button { font: inherit; }
 .profile-close { border: 0; background: transparent; color: inherit; padding: 8px 0; cursor: pointer; text-transform: uppercase; letter-spacing: inherit; }
 .profile-close:hover { opacity: .55; }
 .profile-close:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
-.profile-portrait { margin: 40px 0 30px; aspect-ratio: 4 / 5; overflow: hidden; background: #d8d5cb; }
-.profile-portrait img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.profile-portrait {
+  width: min(190px, 50%);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  margin: 32px auto 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #d8d5cb;
+}
+.profile-portrait img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; }
 .profile-portrait-empty { display: grid; place-items: center; border: 1px solid #aaa99f; color: #696962; }
 .profile-portrait-empty span { font: 10px/1 'DM Mono', monospace; letter-spacing: .16em; text-transform: uppercase; }
-.profile-details { margin-top: auto; }
-.profile-details .eyebrow { margin: 0 0 10px; }
-.profile-details h2 { margin: 0 0 28px; font-size: clamp(44px, 10vw, 68px); line-height: .85; letter-spacing: -.065em; text-transform: uppercase; }
+.profile-details { margin-top: 32px; }
 .profile-links { border-top: 1px solid #151512; }
 .profile-link {
+  min-width: 0;
   min-height: 54px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  justify-content: flex-start;
+  padding: 0 12px;
   border-bottom: 1px solid #151512;
   color: inherit;
   font: 11px/1.3 'DM Mono', monospace;
   letter-spacing: .08em;
   text-decoration: none;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+  user-select: text;
 }
-a.profile-link:hover, a.profile-link:focus-visible { padding-inline: 10px; background: #151512; color: #f0eee7; outline: none; }
+a.profile-link:hover, a.profile-link:focus-visible { background: #151512; color: #f0eee7; outline: none; }
+.profile-email-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; border-bottom: 1px solid #151512; }
+.profile-email-row .profile-link { border-bottom: 0; letter-spacing: normal; text-transform: none; }
+.profile-copy-button {
+  min-width: 72px;
+  min-height: 54px;
+  border: 0;
+  border-left: 1px solid #151512;
+  padding: 0 12px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: 10px/1 'DM Mono', monospace;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  touch-action: manipulation;
+}
+.profile-copy-button:hover, .profile-copy-button:focus-visible { background: #151512; color: #f0eee7; outline: none; }
+.profile-copy-status { min-height: 16px; margin: 10px 0 0; color: #696962; font: 9px/1.5 'DM Mono', monospace; letter-spacing: .04em; }
 .profile-link-empty { color: #696962; }
 
 .startup-content {
@@ -146,7 +174,7 @@ a.profile-link:hover, a.profile-link:focus-visible { padding-inline: 10px; backg
   font-size: clamp(46px, 9vw, 148px);
   font-weight: 800;
   letter-spacing: -.085em;
-  line-height: .76;
+  line-height: .9;
 }
 
 .project-options { border-top: 1px solid #151512; }
@@ -179,6 +207,7 @@ a.profile-link:hover, a.profile-link:focus-visible { padding-inline: 10px; backg
 .option-copy { display: flex; flex-direction: column; gap: 7px; }
 .option-copy strong { font-size: clamp(25px, 3vw, 42px); letter-spacing: -.04em; line-height: 1; }
 .option-copy small { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.sandbox-option .option-copy small { text-transform: none; }
 .option-arrow { font-size: 34px; font-weight: 300; transition: transform .25s ease; }
 .project-option:hover .option-arrow { transform: translate(4px, -4px); }
 
@@ -193,10 +222,25 @@ a.profile-link:hover, a.profile-link:focus-visible { padding-inline: 10px; backg
 .camcorder-nav { padding-bottom: 22px; border-bottom: 1px solid #1b1b18; }
 .text-button { border: 0; background: none; color: inherit; cursor: pointer; font: inherit; letter-spacing: inherit; text-transform: inherit; padding: 8px 0; }
 .text-button:hover { opacity: .55; }
-.camcorder-header { display: grid; grid-template-columns: 1fr 380px; gap: 30px; padding: 72px 0 76px; align-items: end; }
-.camcorder-header .eyebrow { grid-column: 1 / -1; margin: 0; }
-.camcorder-header h1 { font-size: clamp(48px, 8vw, 116px); line-height: .82; letter-spacing: -.075em; margin: 0; }
-.camcorder-intro { max-width: 370px; font-size: 18px; line-height: 1.5; letter-spacing: -.02em; }
+.camcorder-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+  column-gap: clamp(32px, 6vw, 90px);
+  row-gap: 32px;
+  padding: 72px 0 76px;
+  align-items: end;
+}
+.camcorder-header h1 { grid-column: 1 / -1; font-size: clamp(58px, 9vw, 132px); line-height: .82; letter-spacing: -.075em; margin: 0; }
+.camcorder-subtitle {
+  max-width: 42ch;
+  margin: 0;
+  font-size: clamp(21px, 2.4vw, 34px);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+.camcorder-intro { max-width: 34ch; margin: 0; font: 400 clamp(13px, 1.1vw, 16px)/1.6 'DM Mono', monospace; letter-spacing: -.02em; text-wrap: balance; }
 .photo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 70px 22px; margin-top: 100px; }
 .photo-slot:nth-child(3n) { grid-column: 1 / -1; width: 68%; margin-inline: auto; }
 .photo-frame {
@@ -230,7 +274,6 @@ a.profile-link:hover, a.profile-link:focus-visible { padding-inline: 10px; backg
   letter-spacing: .16em;
 }
 .video-frame { margin: 0; background: #1b1b18; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.video-frame:nth-child(3) { grid-column: 1 / -1; }
 .video-label {
   align-self: stretch;
   padding: 10px 12px;
@@ -239,10 +282,10 @@ a.profile-link:hover, a.profile-link:focus-visible { padding-inline: 10px; backg
   letter-spacing: .14em;
 }
 .video-frame video { width: 100%; height: auto; display: block; object-fit: contain; }
-.video-frame:nth-child(3) video { width: auto; max-width: 100%; max-height: 80vh; }
+.cassette-video { grid-template-columns: 1fr; margin-top: 100px; }
+.cassette-video .video-frame video { width: auto; max-width: 100%; max-height: 80vh; }
 
 .build-summary { margin-top: 100px; border-top: 1px solid; padding-top: 22px; }
-.build-summary .eyebrow { margin: 0 0 22px; }
 .build-summary h2 { margin: 0 0 40px; font-size: clamp(40px, 6vw, 82px); line-height: .9; letter-spacing: -.06em; }
 .parts-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid #aaa99f; }
 .parts-list li, .build-total { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; }
@@ -312,23 +355,25 @@ a.profile-link:hover, a.profile-link:focus-visible { padding-inline: 10px; backg
 @media (max-width: 700px) {
   .startup-menu, .camcorder-page { padding: 20px; }
   .startup-content { width: 100%; }
-  .startup-content > h1 { margin-bottom: 34px; font-size: clamp(40px, 12vw, 54px); }
+  .startup-content > h1 { margin-bottom: 34px; font-size: clamp(40px, 12vw, 54px); line-height: .92; }
   .project-option { min-height: 118px; grid-template-columns: 40px 1fr auto; padding-right: 4px; }
   .option-copy small { max-width: 210px; line-height: 1.5; }
   .camcorder-nav > span { display: none; }
-  .camcorder-header { grid-template-columns: 1fr; padding: 54px 0; }
-  .camcorder-header .eyebrow { grid-column: auto; }
-  .camcorder-intro { font-size: 15px; }
+  .camcorder-header { grid-template-columns: 1fr; row-gap: 24px; padding: 54px 0; }
+  .camcorder-header h1 { grid-column: auto; }
+  .camcorder-subtitle { max-width: 34ch; font-size: clamp(21px, 6vw, 30px); line-height: 1.2; }
+  .camcorder-intro { max-width: 32ch; margin-top: 6px; font-size: 13px; }
   .photo-grid { grid-template-columns: 1fr; gap: 48px; }
   .video-grid { grid-template-columns: 1fr; }
-  .video-frame:nth-child(3) { grid-column: auto; }
   .photo-slot:nth-child(3n) { grid-column: auto; width: 100%; }
   .parts-list li, .build-total { gap: 16px; }
+  .cassette-video { margin-top: 70px; }
 }
 
 @media (max-width: 520px) {
   .profile-dialog { width: 100%; border-right: 0; }
   .profile-drawer { padding: 20px; }
+  .profile-portrait { width: min(170px, 48vw); }
 }
 
 @media (prefers-reduced-motion: reduce) {

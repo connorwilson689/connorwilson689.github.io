@@ -576,12 +576,14 @@ function CamcorderProject({ onExit }) {
         <button type="button" onClick={onExit} className="text-button">
           <span aria-hidden="true">&larr;</span> All projects
         </button>
-        <span>4K Boombox with CRT display / Archive</span>
+        <span>4K Boombox / Archive</span>
       </nav>
 
       <header className="camcorder-header">
-        <p className="eyebrow">Personal documentation</p>
-        <h1>4K Boombox with CRT display</h1>
+        <h1>4K Boombox</h1>
+        <p className="camcorder-subtitle">
+          Audio Cassette Player 4K 30fps Zoom/Macro Lens Camera with real time CRT Camera feed, usb powerbank, AM/FM radio and stereo microphone
+        </p>
         <p className="camcorder-intro">
           250 hours of bad ideas from Jan 2026 to July 2026.
         </p>
@@ -590,7 +592,6 @@ function CamcorderProject({ onExit }) {
       <section className="video-grid" aria-label="Project videos">
         <CamcorderVideo label="footage" {...camcorderVideos.footage} />
         <CamcorderVideo label="cad" {...camcorderVideos.cad} />
-        <CamcorderVideo label="custom cassette deck mechanics" {...camcorderVideos.external} />
       </section>
 
       <section className="photo-grid" aria-label="Camcorder photo locations">
@@ -613,7 +614,6 @@ function CamcorderProject({ onExit }) {
       </section>
 
       <section className="build-summary" aria-labelledby="build-summary-title">
-        <p className="eyebrow">Build summary</p>
         <h2 id="build-summary-title">Parts + cost</h2>
         <ul className="parts-list">
           <li><span>Broken GoPro HERO4 with Sony Exmor CMOS sensor</span><span>$10.00</span></li>
@@ -628,8 +628,12 @@ function CamcorderProject({ onExit }) {
         <p className="build-total"><span>Total</span><strong>$25.00</strong></p>
       </section>
 
+      <section className="video-grid cassette-video" aria-label="Custom cassette deck mechanics video">
+        <CamcorderVideo label="custom cassette deck mechanics" {...camcorderVideos.external} />
+      </section>
+
       <footer className="camcorder-footer">
-        <span>4K Boombox with CRT display</span>
+        <span>4K Boombox</span>
         <span>© {new Date().getFullYear()}</span>
       </footer>
     </main>
@@ -654,6 +658,7 @@ function CamcorderVideo({ label, src, type }) {
 
 function ProfileDrawer({ open, onClose, triggerRef }) {
   const dialogRef = useRef(null);
+  const [copyStatus, setCopyStatus] = useState('');
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -664,6 +669,18 @@ function ProfileDrawer({ open, onClose, triggerRef }) {
   }, [open]);
 
   const closeDialog = () => dialogRef.current?.close();
+  const copyEmailAddress = async () => {
+    const encodedAddress = profile.contactHref?.replace(/^mailto:/i, '').split('?')[0];
+    if (!encodedAddress) return;
+
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard access unavailable');
+      await navigator.clipboard.writeText(decodeURIComponent(encodedAddress));
+      setCopyStatus('Email copied');
+    } catch {
+      setCopyStatus('Copy unavailable — select and copy the email address');
+    }
+  };
 
   return (
     <dialog
@@ -672,6 +689,7 @@ function ProfileDrawer({ open, onClose, triggerRef }) {
       className="profile-dialog"
       aria-labelledby="profile-title"
       onClose={() => {
+        setCopyStatus('');
         onClose();
         triggerRef.current?.focus();
       }}
@@ -681,7 +699,7 @@ function ProfileDrawer({ open, onClose, triggerRef }) {
     >
       <div className="profile-drawer">
         <header className="profile-drawer-header">
-          <span>Profile / Contact</span>
+          <span id="profile-title">Profile / Contact</span>
           <button type="button" className="profile-close" onClick={closeDialog}>Close</button>
         </header>
 
@@ -698,19 +716,25 @@ function ProfileDrawer({ open, onClose, triggerRef }) {
           )}
         </figure>
 
-        <section className="profile-details">
-          <p className="eyebrow">Personal details</p>
-          <h2 id="profile-title">{profile.name || 'Profile'}</h2>
+        <div className="profile-details">
           <div className="profile-links">
             {profile.contactHref ? (
-              <a className="profile-link" href={profile.contactHref}>
-                <span>{profile.contactLabel || 'Contact'}</span>
-                <span aria-hidden="true">&rarr;</span>
-              </a>
+              <div className="profile-email-row">
+                <a className="profile-link" href={profile.contactHref}>
+                  {profile.contactLabel || 'Email'}
+                </a>
+                <button
+                  type="button"
+                  className="profile-copy-button"
+                  aria-label="Copy email address"
+                  onClick={copyEmailAddress}
+                >
+                  Copy
+                </button>
+              </div>
             ) : (
               <span className="profile-link profile-link-empty">
-                <span>Contact</span>
-                <span aria-hidden="true">&mdash;</span>
+                Email
               </span>
             )}
 
@@ -718,20 +742,17 @@ function ProfileDrawer({ open, onClose, triggerRef }) {
               <a
                 className="profile-link"
                 href={profile.linkedInHref}
-                target="_blank"
-                rel="noreferrer"
               >
-                <span>LinkedIn</span>
-                <span aria-hidden="true">&nearr;</span>
+                LinkedIn
               </a>
             ) : (
               <span className="profile-link profile-link-empty">
-                <span>LinkedIn</span>
-                <span aria-hidden="true">&mdash;</span>
+                LinkedIn
               </span>
             )}
           </div>
-        </section>
+          <p className="profile-copy-status" role="status" aria-live="polite">{copyStatus}</p>
+        </div>
       </div>
     </dialog>
   );
@@ -765,7 +786,7 @@ function StartupMenu({ onSelect }) {
           <button type="button" className="project-option camcorder-option" onClick={() => onSelect('camcorder')}>
             <span className="option-number">01</span>
             <span className="option-copy">
-              <strong>4K Boombox with CRT display</strong>
+              <strong>4K Boombox</strong>
               <small>Camera build and footage</small>
             </span>
             <span className="option-arrow" aria-hidden="true">↗</span>
@@ -774,7 +795,7 @@ function StartupMenu({ onSelect }) {
             <span className="option-number">02</span>
             <span className="option-copy">
               <strong>Solid Works Sandbox</strong>
-              <small>Enter the interactive 3D world</small>
+              <small>interactive 3d world</small>
             </span>
             <span className="option-arrow" aria-hidden="true">↗</span>
           </button>
