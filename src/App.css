@@ -102,11 +102,12 @@ button { font: inherit; }
 .profile-close { border: 0; background: transparent; color: inherit; padding: 8px 0; cursor: pointer; text-transform: uppercase; letter-spacing: inherit; }
 .profile-close:hover { opacity: .55; }
 .profile-close:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.profile-identity { margin: 32px 0 0; text-align: center; }
 .profile-portrait {
   width: min(190px, 50%);
   aspect-ratio: 1;
   flex: 0 0 auto;
-  margin: 32px auto 0;
+  margin: 0 auto;
   overflow: hidden;
   border-radius: 50%;
   background: #d8d5cb;
@@ -114,6 +115,7 @@ button { font: inherit; }
 .profile-portrait img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; }
 .profile-portrait-empty { display: grid; place-items: center; border: 1px solid #aaa99f; color: #696962; }
 .profile-portrait-empty span { font: 10px/1 'DM Mono', monospace; letter-spacing: .16em; text-transform: uppercase; }
+.profile-name { margin-top: 14px; font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: -.02em; }
 .profile-details { margin-top: 32px; }
 .profile-links { border-top: 1px solid #151512; }
 .profile-link {
@@ -176,6 +178,8 @@ a.profile-link:hover, a.profile-link:focus-visible { background: #151512; color:
   letter-spacing: -.085em;
   line-height: .9;
 }
+.startup-heading-line { display: block; }
+.startup-heading-first { margin-bottom: clamp(7px, .12em, 18px); font-size: .9em; line-height: .86; }
 
 .project-options { border-top: 1px solid #151512; }
 
@@ -373,7 +377,9 @@ a.profile-link:hover, a.profile-link:focus-visible { background: #151512; color:
 @media (max-width: 520px) {
   .profile-dialog { width: 100%; border-right: 0; }
   .profile-drawer { padding: 20px; }
+  .profile-identity { margin-top: 28px; }
   .profile-portrait { width: min(170px, 48vw); }
+  .profile-name { margin-top: 12px; font-size: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
