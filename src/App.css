@@ -354,8 +354,6 @@ a.profile-link:hover, a.profile-link:focus-visible { background: #151512; color:
 .performance-group dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
 .performance-group dt { opacity: .72; }
 .performance-group dd { margin: 0; white-space: nowrap; }
-.performance-note { margin: 14px 0 0; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .18); opacity: .62; font-size: 9px; line-height: 1.5; }
-
 @media (max-width: 700px) {
   .startup-menu, .camcorder-page { padding: 20px; }
   .startup-content { width: 100%; }

@@ -179,7 +179,6 @@ function PerformanceReadout({ stats }) {
           <div><dt>JS heap</dt><dd>{stats.heapMb === null ? '—' : `${count(stats.heapMb)} MB`}</dd></div>
         </dl>
       </div>
-      <p className="performance-note">Exact object and script timing still needs the browser profiler.</p>
     </div>
   );
 }
