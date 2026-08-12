@@ -1,7 +1,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Physics, useAfterPhysicsStep, useBeforePhysicsStep, useRapier } from '@react-three/rapier';
 import { KeyboardControls, Sky, Stars, Cloud } from '@react-three/drei';
-import { Suspense, useState, useEffect, useMemo, useRef } from 'react';
+import { memo, Suspense, useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Experience from './Experience';
 import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
@@ -97,9 +97,9 @@ function SandboxPerformanceProbe({ onSample }) {
 
     if (current.elapsed < PERFORMANCE_SAMPLE_SECONDS) return;
 
-    let visibleMeshes = 0;
-    scene.traverseVisible((object) => {
-      if (object.isMesh) visibleMeshes += 1;
+    let sceneMeshes = 0;
+    scene.traverse((object) => {
+      if (object.isMesh) sceneMeshes += 1;
     });
 
     const browserMemory = window.performance.memory;
@@ -109,7 +109,7 @@ function SandboxPerformanceProbe({ onSample }) {
       worstFrameMs: current.worstFrameMs,
       drawCalls: current.drawCalls / current.frames,
       triangles: current.triangles / current.frames,
-      visibleMeshes,
+      sceneMeshes,
       geometries: gl.info.memory.geometries,
       textures: gl.info.memory.textures,
       renderWidth: gl.domElement.width,
@@ -157,7 +157,7 @@ function PerformanceReadout({ stats }) {
         <dl>
           <div><dt>Draw calls</dt><dd>{count(stats.drawCalls)}</dd></div>
           <div><dt>Triangles</dt><dd>{count(stats.triangles)}</dd></div>
-          <div><dt>Visible meshes</dt><dd>{count(stats.visibleMeshes)}</dd></div>
+          <div><dt>Scene meshes</dt><dd>{count(stats.sceneMeshes)}</dd></div>
           <div><dt>Buffer</dt><dd>{stats.renderWidth} × {stats.renderHeight}</dd></div>
           <div><dt>Pixel ratio</dt><dd>{stats.pixelRatio.toFixed(2)}</dd></div>
         </dl>
@@ -184,11 +184,56 @@ function PerformanceReadout({ stats }) {
   );
 }
 
+const MemoizedExperience = memo(Experience);
+
+const SandboxWorld = memo(function SandboxWorld({
+  dpr,
+  character,
+  cameraSensitivity,
+  showPerformance,
+  onPerformanceSample,
+  onFallStateChange
+}) {
+  return (
+    <Canvas
+      dpr={dpr}
+      gl={{ antialias: false, powerPreference: 'high-performance', stencil: false, depth: true }}
+      performance={{ min: 0.45 }}
+      camera={{ position: [0, 5, 10], fov: 50 }}
+      className="retro-canvas"
+      style={{ height: '100vh', background: '#ececec', imageRendering: 'pixelated' }}
+    >
+      <color attach="background" args={["#f39a67"]} />
+      <fog attach="fog" args={["#d97967", 34, 170]} />
+      <ambientLight intensity={0.82} />
+      <hemisphereLight args={["#ffbd82", "#4f6f40", 0.9]} />
+      <directionalLight position={[22, 15, 12]} intensity={1.7} color="#ff9f5f" />
+      <Sky distance={450000} sunPosition={[8, 1.7, 8]} turbidity={9} rayleigh={3.2} mieCoefficient={0.012} mieDirectionalG={0.88} />
+      <Cloud seed={11} position={[-18, 18, -30]} speed={0.12} opacity={0.5} width={16} depth={4} segments={4} />
+      <Cloud seed={29} position={[12, 15, -26]} speed={0.08} opacity={0.45} width={13} depth={4} segments={4} />
+      <Cloud seed={47} position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={4} />
+      <Stars radius={170} depth={40} count={220} factor={5} saturation={0} fade speed={0.6} />
+
+      <Physics>
+        {showPerformance && <SandboxPerformanceProbe onSample={onPerformanceSample} />}
+        <Suspense fallback={null}>
+          <MemoizedExperience
+            key={character || 'no-character'}
+            activeCharacter={character}
+            onFallStateChange={onFallStateChange}
+            cameraSensitivity={cameraSensitivity}
+          />
+        </Suspense>
+      </Physics>
+    </Canvas>
+  );
+});
+
 function SolidWorksSandbox({ onExit }) {
   const [character, setCharacter] = useState(null);
   
   const setJoystick = useJoystickControls((state) => state.setJoystick)
-  const releaseButton1 = useJoystickControls((state) => state.releaseButton1)
+  const releaseAllButtons = useJoystickControls((state) => state.releaseAllButtons)
 
   //RESOLUTION LOCK
   const [dpr, setDpr] = useState(1); // State to hold our calculated resolution
@@ -198,6 +243,8 @@ function SolidWorksSandbox({ onExit }) {
   const [loopingThoughts, setLoopingThoughts] = useState([]);
   const [showPerformance, setShowPerformance] = useState(false);
   const [performanceStats, setPerformanceStats] = useState(null);
+  const handlePerformanceSample = useCallback((stats) => setPerformanceStats(stats), []);
+  const handleFallStateChange = useCallback((falling) => setShowFallMessage(falling), []);
 
   const thoughtMessages = useMemo(() => ([
     'where was I going again?',
@@ -253,7 +300,7 @@ function SolidWorksSandbox({ onExit }) {
   // It fixes the "Sticky Button" bug 100%.
   useEffect(() => {
     const handleRelease = () => {
-      releaseButton1(); 
+      releaseAllButtons();
     };
     
     // Listen to every possible "Let Go" event
@@ -268,7 +315,7 @@ function SolidWorksSandbox({ onExit }) {
       window.removeEventListener('touchcancel', handleRelease);
       window.removeEventListener('pointerup', handleRelease);
     };
-  }, [releaseButton1]);
+  }, [releaseAllButtons]);
 
 
   return (
@@ -471,41 +518,14 @@ function SolidWorksSandbox({ onExit }) {
         </div>
       )}
 
-      {/* --- THE 3D WORLD --- */}
-      <Canvas
+      <SandboxWorld
         dpr={dpr}
-        gl={{ antialias: false, powerPreference: 'high-performance', stencil: false, depth: true }}
-        performance={{ min: 0.45 }}
-        camera={{ position: [0, 5, 10], fov: 50 }}
-        className="retro-canvas"
-        //pixelated added to keep it from bluring
-        style={{ height: '100vh', background: '#ececec', imageRendering: 'pixelated' }}
-      >
-        <color attach="background" args={["#f39a67"]} />
-        <fog attach="fog" args={["#d97967", 34, 170]} />
-        <ambientLight intensity={0.82} />
-        <hemisphereLight args={["#ffbd82", "#4f6f40", 0.9]} />
-        <directionalLight position={[22, 15, 12]} intensity={1.7} color="#ff9f5f" />
-        <Sky distance={450000} sunPosition={[8, 1.7, 8]} turbidity={9} rayleigh={3.2} mieCoefficient={0.012} mieDirectionalG={0.88} />
-        <Cloud position={[-18, 18, -30]} speed={0.12} opacity={0.5} width={16} depth={4} segments={4} />
-        <Cloud position={[12, 15, -26]} speed={0.08} opacity={0.45} width={13} depth={4} segments={4} />
-        <Cloud position={[30, 20, -20]} speed={0.1} opacity={0.35} width={18} depth={5} segments={4} />
-        <Stars radius={170} depth={40} count={220} factor={5} saturation={0} fade speed={0.6} />
-        
-        {/* use this to see physics boxes: <Physics debug> */}
-        <Physics>
-          {showPerformance && <SandboxPerformanceProbe onSample={setPerformanceStats} />}
-          <Suspense fallback={null}>
-            {/* Pass the chosen character down after selection; Experience delays spawning. */}
-            <Experience
-              key={character || 'no-character'}
-              activeCharacter={character}
-              onFallStateChange={setShowFallMessage}
-              cameraSensitivity={cameraSensitivity}
-            />
-          </Suspense>
-        </Physics>
-      </Canvas>
+        character={character}
+        cameraSensitivity={cameraSensitivity}
+        showPerformance={showPerformance}
+        onPerformanceSample={handlePerformanceSample}
+        onFallStateChange={handleFallStateChange}
+      />
     </KeyboardControls>
   );
 }
@@ -613,6 +633,10 @@ function CamcorderProject({ onExit }) {
         ))}
       </section>
 
+      <section className="video-grid cassette-video" aria-label="Custom cassette deck mechanics video">
+        <CamcorderVideo label="custom cassette deck mechanics" {...camcorderVideos.external} />
+      </section>
+
       <section className="build-summary" aria-labelledby="build-summary-title">
         <h2 id="build-summary-title">Parts + cost</h2>
         <ul className="parts-list">
@@ -626,10 +650,6 @@ function CamcorderProject({ onExit }) {
           <li><span>Mini USB connector, USB connector, old Apple Earbuds microphone, GA-Tech 3D-print materials, wires, and glue</span><span>Free</span></li>
         </ul>
         <p className="build-total"><span>Total</span><strong>$25.00</strong></p>
-      </section>
-
-      <section className="video-grid cassette-video" aria-label="Custom cassette deck mechanics video">
-        <CamcorderVideo label="custom cassette deck mechanics" {...camcorderVideos.external} />
       </section>
 
       <footer className="camcorder-footer">
@@ -703,17 +723,20 @@ function ProfileDrawer({ open, onClose, triggerRef }) {
           <button type="button" className="profile-close" onClick={closeDialog}>Close</button>
         </header>
 
-        <figure className={`profile-portrait${profile.portraitSrc ? '' : ' profile-portrait-empty'}`}>
-          {profile.portraitSrc ? (
-            <img
-              src={profile.portraitSrc}
-              alt={profile.portraitAlt || 'Profile portrait'}
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <span>Portrait</span>
-          )}
+        <figure className="profile-identity">
+          <div className={`profile-portrait${profile.portraitSrc ? '' : ' profile-portrait-empty'}`}>
+            {profile.portraitSrc ? (
+              <img
+                src={profile.portraitSrc}
+                alt={profile.portraitAlt || 'Profile portrait'}
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <span>Portrait</span>
+            )}
+          </div>
+          <figcaption className="profile-name">Connor Wilson</figcaption>
         </figure>
 
         <div className="profile-details">
@@ -781,7 +804,10 @@ function StartupMenu({ onSelect }) {
       </header>
 
       <section className="startup-content">
-        <h1>THERE,<br />SLOW DREAMER</h1>
+        <h1>
+          <span className="startup-heading-line startup-heading-first">THERE,</span>
+          <span className="startup-heading-line">SLOW DREAMER</span>
+        </h1>
         <div className="project-options">
           <button type="button" className="project-option camcorder-option" onClick={() => onSelect('camcorder')}>
             <span className="option-number">01</span>

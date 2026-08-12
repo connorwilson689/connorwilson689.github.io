@@ -1,0 +1,334 @@
+diff --git a/node_modules/ecctrl/dist/Ecctrl.cjs b/node_modules/ecctrl/dist/Ecctrl.cjs
+index 3f11ce6..bb320d9 100644
+--- a/node_modules/ecctrl/dist/Ecctrl.cjs
++++ b/node_modules/ecctrl/dist/Ecctrl.cjs
+@@ -52,6 +52,16 @@ const useFollowCam = function({
+   let isMouseDown = false;
+   let previousTouch1 = null;
+   let previousTouch2 = null;
++  const camMoveSpeedRef = React.useRef(camMoveSpeed);
++  React.useEffect(() => {
++    camMoveSpeedRef.current = camMoveSpeed;
++  }, [camMoveSpeed]);
++  const onMouseDown = () => {
++    isMouseDown = true;
++  };
++  const onMouseUp = () => {
++    isMouseDown = false;
++  };
+   const originZDis = React.useRef(camInitDis != null ? camInitDis : -5);
+   const pivot = React.useMemo(() => new THREE__namespace.Object3D(), []);
+   const followCam = React.useMemo(() => {
+@@ -79,8 +89,8 @@ const useFollowCam = function({
+   );
+   const onDocumentMouseMove = (e) => {
+     if (document.pointerLockElement || isMouseDown) {
+-      pivot.rotation.y -= e.movementX * 2e-3 * camMoveSpeed;
+-      const vy = followCam.rotation.x + e.movementY * 2e-3 * camMoveSpeed;
++      pivot.rotation.y -= e.movementX * 2e-3 * camMoveSpeedRef.current;
++      const vy = followCam.rotation.x + e.movementY * 2e-3 * camMoveSpeedRef.current;
+       cameraDistance = followCam.position.length();
+       if (vy >= camLowLimit && vy <= camUpLimit) {
+         followCam.rotation.x = vy;
+@@ -112,8 +122,8 @@ const useFollowCam = function({
+     if (previousTouch1 && !previousTouch2) {
+       const touch1MovementX = touch1.pageX - previousTouch1.pageX;
+       const touch1MovementY = touch1.pageY - previousTouch1.pageY;
+-      pivot.rotation.y -= touch1MovementX * 5e-3 * camMoveSpeed;
+-      const vy = followCam.rotation.x + touch1MovementY * 5e-3 * camMoveSpeed;
++      pivot.rotation.y -= touch1MovementX * 5e-3 * camMoveSpeedRef.current;
++      const vy = followCam.rotation.x + touch1MovementY * 5e-3 * camMoveSpeedRef.current;
+       cameraDistance = followCam.position.length();
+       if (vy >= camLowLimit && vy <= camUpLimit) {
+         followCam.rotation.x = vy;
+@@ -142,8 +152,8 @@ const useFollowCam = function({
+     previousTouch2 = touch2;
+   };
+   const joystickCamMove = (movementX, movementY) => {
+-    pivot.rotation.y -= movementX * 5e-3 * camMoveSpeed * 5;
+-    const vy = followCam.rotation.x + movementY * 5e-3 * camMoveSpeed * 5;
++    pivot.rotation.y -= movementX * 5e-3 * camMoveSpeedRef.current * 5;
++    const vy = followCam.rotation.x + movementY * 5e-3 * camMoveSpeedRef.current * 5;
+     cameraDistance = followCam.position.length();
+     if (vy >= camLowLimit && vy <= camUpLimit) {
+       followCam.rotation.x = vy;
+@@ -195,23 +205,15 @@ const useFollowCam = function({
+     pivot.add(followCam);
+     scene.add(pivot);
+     if (camListenerTarget === "domElement") {
+-      gl.domElement.addEventListener("mousedown", () => {
+-        isMouseDown = true;
+-      });
+-      gl.domElement.addEventListener("mouseup", () => {
+-        isMouseDown = false;
+-      });
++      gl.domElement.addEventListener("mousedown", onMouseDown);
++      gl.domElement.addEventListener("mouseup", onMouseUp);
+       gl.domElement.addEventListener("mousemove", onDocumentMouseMove);
+       gl.domElement.addEventListener("mousewheel", onDocumentMouseWheel);
+       gl.domElement.addEventListener("touchend", onTouchEnd);
+       gl.domElement.addEventListener("touchmove", onTouchMove, { passive: false });
+     } else if (camListenerTarget === "document") {
+-      document.addEventListener("mousedown", () => {
+-        isMouseDown = true;
+-      });
+-      document.addEventListener("mouseup", () => {
+-        isMouseDown = false;
+-      });
++      document.addEventListener("mousedown", onMouseDown);
++      document.addEventListener("mouseup", onMouseUp);
+       document.addEventListener("mousemove", onDocumentMouseMove);
+       document.addEventListener("mousewheel", onDocumentMouseWheel);
+       document.addEventListener("touchend", onTouchEnd);
+@@ -219,28 +221,21 @@ const useFollowCam = function({
+     }
+     return () => {
+       if (camListenerTarget === "domElement") {
+-        gl.domElement.removeEventListener("mousedown", () => {
+-          isMouseDown = true;
+-        });
+-        gl.domElement.removeEventListener("mouseup", () => {
+-          isMouseDown = false;
+-        });
++        gl.domElement.removeEventListener("mousedown", onMouseDown);
++        gl.domElement.removeEventListener("mouseup", onMouseUp);
+         gl.domElement.removeEventListener("mousemove", onDocumentMouseMove);
+         gl.domElement.removeEventListener("mousewheel", onDocumentMouseWheel);
+         gl.domElement.removeEventListener("touchend", onTouchEnd);
+         gl.domElement.removeEventListener("touchmove", onTouchMove);
+       } else if (camListenerTarget === "document") {
+-        document.removeEventListener("mousedown", () => {
+-          isMouseDown = true;
+-        });
+-        document.removeEventListener("mouseup", () => {
+-          isMouseDown = false;
+-        });
++        document.removeEventListener("mousedown", onMouseDown);
++        document.removeEventListener("mouseup", onMouseUp);
+         document.removeEventListener("mousemove", onDocumentMouseMove);
+         document.removeEventListener("mousewheel", onDocumentMouseWheel);
+         document.removeEventListener("touchend", onTouchEnd);
+         document.removeEventListener("touchmove", onTouchMove);
+       }
++      scene.remove(pivot);
+     };
+   }, []);
+   React.useEffect(() => {
+diff --git a/node_modules/ecctrl/dist/Ecctrl.js b/node_modules/ecctrl/dist/Ecctrl.js
+index ef5e808..6c9ade0 100644
+--- a/node_modules/ecctrl/dist/Ecctrl.js
++++ b/node_modules/ecctrl/dist/Ecctrl.js
+@@ -33,6 +33,16 @@ const useFollowCam = function({
+   let isMouseDown = false;
+   let previousTouch1 = null;
+   let previousTouch2 = null;
++  const camMoveSpeedRef = useRef(camMoveSpeed);
++  useEffect(() => {
++    camMoveSpeedRef.current = camMoveSpeed;
++  }, [camMoveSpeed]);
++  const onMouseDown = () => {
++    isMouseDown = true;
++  };
++  const onMouseUp = () => {
++    isMouseDown = false;
++  };
+   const originZDis = useRef(camInitDis != null ? camInitDis : -5);
+   const pivot = useMemo(() => new THREE.Object3D(), []);
+   const followCam = useMemo(() => {
+@@ -60,8 +70,8 @@ const useFollowCam = function({
+   );
+   const onDocumentMouseMove = (e) => {
+     if (document.pointerLockElement || isMouseDown) {
+-      pivot.rotation.y -= e.movementX * 2e-3 * camMoveSpeed;
+-      const vy = followCam.rotation.x + e.movementY * 2e-3 * camMoveSpeed;
++      pivot.rotation.y -= e.movementX * 2e-3 * camMoveSpeedRef.current;
++      const vy = followCam.rotation.x + e.movementY * 2e-3 * camMoveSpeedRef.current;
+       cameraDistance = followCam.position.length();
+       if (vy >= camLowLimit && vy <= camUpLimit) {
+         followCam.rotation.x = vy;
+@@ -93,8 +103,8 @@ const useFollowCam = function({
+     if (previousTouch1 && !previousTouch2) {
+       const touch1MovementX = touch1.pageX - previousTouch1.pageX;
+       const touch1MovementY = touch1.pageY - previousTouch1.pageY;
+-      pivot.rotation.y -= touch1MovementX * 5e-3 * camMoveSpeed;
+-      const vy = followCam.rotation.x + touch1MovementY * 5e-3 * camMoveSpeed;
++      pivot.rotation.y -= touch1MovementX * 5e-3 * camMoveSpeedRef.current;
++      const vy = followCam.rotation.x + touch1MovementY * 5e-3 * camMoveSpeedRef.current;
+       cameraDistance = followCam.position.length();
+       if (vy >= camLowLimit && vy <= camUpLimit) {
+         followCam.rotation.x = vy;
+@@ -123,8 +133,8 @@ const useFollowCam = function({
+     previousTouch2 = touch2;
+   };
+   const joystickCamMove = (movementX, movementY) => {
+-    pivot.rotation.y -= movementX * 5e-3 * camMoveSpeed * 5;
+-    const vy = followCam.rotation.x + movementY * 5e-3 * camMoveSpeed * 5;
++    pivot.rotation.y -= movementX * 5e-3 * camMoveSpeedRef.current * 5;
++    const vy = followCam.rotation.x + movementY * 5e-3 * camMoveSpeedRef.current * 5;
+     cameraDistance = followCam.position.length();
+     if (vy >= camLowLimit && vy <= camUpLimit) {
+       followCam.rotation.x = vy;
+@@ -176,23 +186,15 @@ const useFollowCam = function({
+     pivot.add(followCam);
+     scene.add(pivot);
+     if (camListenerTarget === "domElement") {
+-      gl.domElement.addEventListener("mousedown", () => {
+-        isMouseDown = true;
+-      });
+-      gl.domElement.addEventListener("mouseup", () => {
+-        isMouseDown = false;
+-      });
++      gl.domElement.addEventListener("mousedown", onMouseDown);
++      gl.domElement.addEventListener("mouseup", onMouseUp);
+       gl.domElement.addEventListener("mousemove", onDocumentMouseMove);
+       gl.domElement.addEventListener("mousewheel", onDocumentMouseWheel);
+       gl.domElement.addEventListener("touchend", onTouchEnd);
+       gl.domElement.addEventListener("touchmove", onTouchMove, { passive: false });
+     } else if (camListenerTarget === "document") {
+-      document.addEventListener("mousedown", () => {
+-        isMouseDown = true;
+-      });
+-      document.addEventListener("mouseup", () => {
+-        isMouseDown = false;
+-      });
++      document.addEventListener("mousedown", onMouseDown);
++      document.addEventListener("mouseup", onMouseUp);
+       document.addEventListener("mousemove", onDocumentMouseMove);
+       document.addEventListener("mousewheel", onDocumentMouseWheel);
+       document.addEventListener("touchend", onTouchEnd);
+@@ -200,28 +202,21 @@ const useFollowCam = function({
+     }
+     return () => {
+       if (camListenerTarget === "domElement") {
+-        gl.domElement.removeEventListener("mousedown", () => {
+-          isMouseDown = true;
+-        });
+-        gl.domElement.removeEventListener("mouseup", () => {
+-          isMouseDown = false;
+-        });
++        gl.domElement.removeEventListener("mousedown", onMouseDown);
++        gl.domElement.removeEventListener("mouseup", onMouseUp);
+         gl.domElement.removeEventListener("mousemove", onDocumentMouseMove);
+         gl.domElement.removeEventListener("mousewheel", onDocumentMouseWheel);
+         gl.domElement.removeEventListener("touchend", onTouchEnd);
+         gl.domElement.removeEventListener("touchmove", onTouchMove);
+       } else if (camListenerTarget === "document") {
+-        document.removeEventListener("mousedown", () => {
+-          isMouseDown = true;
+-        });
+-        document.removeEventListener("mouseup", () => {
+-          isMouseDown = false;
+-        });
++        document.removeEventListener("mousedown", onMouseDown);
++        document.removeEventListener("mouseup", onMouseUp);
+         document.removeEventListener("mousemove", onDocumentMouseMove);
+         document.removeEventListener("mousewheel", onDocumentMouseWheel);
+         document.removeEventListener("touchend", onTouchEnd);
+         document.removeEventListener("touchmove", onTouchMove);
+       }
++      scene.remove(pivot);
+     };
+   }, []);
+   useEffect(() => {
+diff --git a/node_modules/ecctrl/src/hooks/useFollowCam.tsx b/node_modules/ecctrl/src/hooks/useFollowCam.tsx
+index 39a4f9e..20be8c8 100644
+--- a/node_modules/ecctrl/src/hooks/useFollowCam.tsx
++++ b/node_modules/ecctrl/src/hooks/useFollowCam.tsx
+@@ -28,6 +28,15 @@ export const useFollowCam = function ({
+   let previousTouch1: Touch | null = null;
+   let previousTouch2: Touch | null = null;
+ 
++  const camMoveSpeedRef = useRef(camMoveSpeed)
++
++  useEffect(() => {
++    camMoveSpeedRef.current = camMoveSpeed
++  }, [camMoveSpeed])
++
++  const onMouseDown = () => { isMouseDown = true }
++  const onMouseUp = () => { isMouseDown = false }
++
+   const originZDis = useRef<number>(camInitDis ?? -5)
+   const pivot = useMemo(() => new THREE.Object3D(), []);
+   const followCam = useMemo(() => {
+@@ -64,8 +73,8 @@ export const useFollowCam = function ({
+   // Mouse move event
+   const onDocumentMouseMove = (e: MouseEvent) => {
+     if (document.pointerLockElement || isMouseDown) {
+-      pivot.rotation.y -= e.movementX * 0.002 * camMoveSpeed;
+-      const vy = followCam.rotation.x + e.movementY * 0.002 * camMoveSpeed;
++      pivot.rotation.y -= e.movementX * 0.002 * camMoveSpeedRef.current;
++      const vy = followCam.rotation.x + e.movementY * 0.002 * camMoveSpeedRef.current;
+ 
+       cameraDistance = followCam.position.length();
+ 
+@@ -114,8 +123,8 @@ export const useFollowCam = function ({
+       const touch1MovementX = touch1.pageX - previousTouch1.pageX;
+       const touch1MovementY = touch1.pageY - previousTouch1.pageY;
+ 
+-      pivot.rotation.y -= touch1MovementX * 0.005 * camMoveSpeed;
+-      const vy = followCam.rotation.x + touch1MovementY * 0.005 * camMoveSpeed;
++      pivot.rotation.y -= touch1MovementX * 0.005 * camMoveSpeedRef.current;
++      const vy = followCam.rotation.x + touch1MovementY * 0.005 * camMoveSpeedRef.current;
+ 
+       cameraDistance = followCam.position.length();
+ 
+@@ -155,8 +164,8 @@ export const useFollowCam = function ({
+    * Gamepad second joystick event
+    */
+   const joystickCamMove = (movementX: number, movementY: number) => {
+-    pivot.rotation.y -= movementX * 0.005 * camMoveSpeed * 5;
+-    const vy = followCam.rotation.x + movementY * 0.005 * camMoveSpeed * 5;
++    pivot.rotation.y -= movementX * 0.005 * camMoveSpeedRef.current * 5;
++    const vy = followCam.rotation.x + movementY * 0.005 * camMoveSpeedRef.current * 5;
+ 
+     cameraDistance = followCam.position.length();
+ 
+@@ -251,16 +260,16 @@ export const useFollowCam = function ({
+     scene.add(pivot);
+ 
+     if (camListenerTarget === "domElement") {
+-      gl.domElement.addEventListener("mousedown", () => { isMouseDown = true });
+-      gl.domElement.addEventListener("mouseup", () => { isMouseDown = false });
++      gl.domElement.addEventListener("mousedown", onMouseDown);
++      gl.domElement.addEventListener("mouseup", onMouseUp);
+       gl.domElement.addEventListener("mousemove", onDocumentMouseMove);
+       gl.domElement.addEventListener("mousewheel", onDocumentMouseWheel);
+       // Touch event
+       gl.domElement.addEventListener("touchend", onTouchEnd);
+       gl.domElement.addEventListener("touchmove", onTouchMove, { passive: false });
+     } else if (camListenerTarget === "document") {
+-      document.addEventListener("mousedown", () => { isMouseDown = true });
+-      document.addEventListener("mouseup", () => { isMouseDown = false });
++      document.addEventListener("mousedown", onMouseDown);
++      document.addEventListener("mouseup", onMouseUp);
+       document.addEventListener("mousemove", onDocumentMouseMove);
+       document.addEventListener("mousewheel", onDocumentMouseWheel);
+       // Touch event
+@@ -270,22 +279,23 @@ export const useFollowCam = function ({
+ 
+     return () => {
+       if (camListenerTarget === "domElement") {
+-        gl.domElement.removeEventListener("mousedown", () => { isMouseDown = true });
+-        gl.domElement.removeEventListener("mouseup", () => { isMouseDown = false });
++        gl.domElement.removeEventListener("mousedown", onMouseDown);
++        gl.domElement.removeEventListener("mouseup", onMouseUp);
+         gl.domElement.removeEventListener("mousemove", onDocumentMouseMove);
+         gl.domElement.removeEventListener("mousewheel", onDocumentMouseWheel);
+         // Touch event
+         gl.domElement.removeEventListener("touchend", onTouchEnd);
+         gl.domElement.removeEventListener("touchmove", onTouchMove);
+       } else if (camListenerTarget === "document") {
+-        document.removeEventListener("mousedown", () => { isMouseDown = true });
+-        document.removeEventListener("mouseup", () => { isMouseDown = false });
++        document.removeEventListener("mousedown", onMouseDown);
++        document.removeEventListener("mouseup", onMouseUp);
+         document.removeEventListener("mousemove", onDocumentMouseMove);
+         document.removeEventListener("mousewheel", onDocumentMouseWheel);
+         // Touch event
+         document.removeEventListener("touchend", onTouchEnd);
+         document.removeEventListener("touchmove", onTouchMove);
+       }
++      scene.remove(pivot);
+     };
+   }, [])
+ 
