@@ -7,6 +7,7 @@ import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
 import { camcorderVideos } from './media';
 import { profile } from './profile';
+import landingWater from './assets/landing-water.jpg';
 import './App.css';
 
 // 1. Define your keyboard map
@@ -34,6 +35,42 @@ const characterCards = [
 ];
 
 const PERFORMANCE_SAMPLE_SECONDS = 0.5;
+
+function ArrowUpRightIcon({ className }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="square"
+      strokeLinejoin="miter"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M5 19 19 5M9 5h10v10" />
+    </svg>
+  );
+}
+
+function ArrowLeftIcon({ className }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="square"
+      strokeLinejoin="miter"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M19 12H5m6-6-6 6 6 6" />
+    </svg>
+  );
+}
 
 function SandboxPerformanceProbe({ onSample }) {
   const { gl, scene } = useThree();
@@ -320,7 +357,8 @@ function SolidWorksSandbox({ onExit }) {
   return (
     <KeyboardControls map={keyboardMap}>
       <button className="sandbox-home-button" type="button" onClick={onExit}>
-        <span aria-hidden="true">&larr;</span> Projects
+        <ArrowLeftIcon className="back-arrow" />
+        Projects
       </button>
   
       {/* 1. MOVE JOYSTICK (Left) */}
@@ -593,7 +631,8 @@ function CamcorderProject({ onExit }) {
     <main className="camcorder-page">
       <nav className="camcorder-nav" aria-label="Project navigation">
         <button type="button" onClick={onExit} className="text-button">
-          <span aria-hidden="true">&larr;</span> All projects
+          <ArrowLeftIcon className="back-arrow" />
+          All projects
         </button>
         <span>4K Boombox / Archive</span>
       </nav>
@@ -786,6 +825,16 @@ function StartupMenu({ onSelect }) {
 
   return (
     <main className="startup-menu">
+      <img
+        className="startup-background"
+        src={landingWater}
+        alt=""
+        aria-hidden="true"
+        width="1039"
+        height="1024"
+        fetchPriority="high"
+        draggable={false}
+      />
       <div className="startup-grain" aria-hidden="true" />
       <header className="startup-header">
         <button
@@ -814,7 +863,7 @@ function StartupMenu({ onSelect }) {
               <strong>4K Boombox</strong>
               <small>Camera build and footage</small>
             </span>
-            <span className="option-arrow" aria-hidden="true">↗</span>
+            <ArrowUpRightIcon className="option-arrow" />
           </button>
           <button type="button" className="project-option sandbox-option" onClick={() => onSelect('sandbox')}>
             <span className="option-number">02</span>
@@ -822,7 +871,7 @@ function StartupMenu({ onSelect }) {
               <strong>Solid Works Sandbox</strong>
               <small>interactive 3d world</small>
             </span>
-            <span className="option-arrow" aria-hidden="true">↗</span>
+            <ArrowUpRightIcon className="option-arrow" />
           </button>
         </div>
       </section>
