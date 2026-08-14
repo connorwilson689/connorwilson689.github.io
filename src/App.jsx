@@ -854,7 +854,7 @@ function StartupMenu({ onSelect }) {
       <section className="startup-content">
         <h1>
           <span className="startup-heading-line startup-heading-first">THERE,</span>
-          <span className="startup-heading-line">SLOW DREAMER</span>
+          <span className="startup-heading-line">THEN</span>
         </h1>
         <div className="project-options">
           <button type="button" className="project-option camcorder-option" onClick={() => onSelect('camcorder')}>
