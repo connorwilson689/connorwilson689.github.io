@@ -7,6 +7,7 @@ import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
 import { camcorderVideos } from './media';
 import { profile } from './profile';
+import { resolveVideoSource, shouldAutoUseUhd, VIDEO_QUALITY } from './videoQuality';
 import landingWater from './assets/landing-water.jpg';
 import './App.css';
 
@@ -626,7 +627,28 @@ const cameraPhotoSlots = [
   }
 ];
 
+function suspendVideo(video) {
+  const source = video.currentSrc || video.getAttribute('src');
+  video.pause();
+  if (!source) return;
+
+  video.dataset.resumeTime = !video.ended && Number.isFinite(video.currentTime) ? String(video.currentTime) : '0';
+  video.dataset.resumeRate = String(video.playbackRate);
+  video.removeAttribute('src');
+  video.load();
+  video.src = source;
+}
+
 function CamcorderProject({ onExit }) {
+  const activeVideoRef = useRef(null);
+  const handleVideoPlay = useCallback((video) => {
+    if (activeVideoRef.current && activeVideoRef.current !== video) {
+      suspendVideo(activeVideoRef.current);
+    }
+    activeVideoRef.current = video;
+  }, []);
+  const isVideoActive = useCallback((video) => activeVideoRef.current === video, []);
+
   return (
     <main className="camcorder-page">
       <nav className="camcorder-nav" aria-label="Project navigation">
@@ -648,8 +670,8 @@ function CamcorderProject({ onExit }) {
       </header>
 
       <section className="video-grid" aria-label="Project videos">
-        <CamcorderVideo label="footage" {...camcorderVideos.footage} />
-        <CamcorderVideo label="cad" {...camcorderVideos.cad} />
+        <CamcorderVideo label="footage" onPlay={handleVideoPlay} isActive={isVideoActive} {...camcorderVideos.footage} />
+        <CamcorderVideo label="cad" onPlay={handleVideoPlay} isActive={isVideoActive} {...camcorderVideos.cad} />
       </section>
 
       <section className="photo-grid" aria-label="Camcorder photo locations">
@@ -672,7 +694,7 @@ function CamcorderProject({ onExit }) {
       </section>
 
       <section className="video-grid cassette-video" aria-label="Custom cassette deck mechanics video">
-        <CamcorderVideo label="custom cassette deck mechanics" {...camcorderVideos.external} />
+        <CamcorderVideo label="custom cassette deck mechanics" onPlay={handleVideoPlay} isActive={isVideoActive} {...camcorderVideos.external} />
       </section>
 
       <section className="build-summary" aria-labelledby="build-summary-title">
@@ -698,18 +720,192 @@ function CamcorderProject({ onExit }) {
   );
 }
 
-function CamcorderVideo({ label, src, type }) {
-  if (!src) {
+function isFullscreenVideo(video) {
+  return document.fullscreenElement === video
+    || document.webkitFullscreenElement === video
+    || video.webkitDisplayingFullscreen === true;
+}
+
+function CamcorderVideo({ label, poster, sources, onPlay, isActive }) {
+  const videoRef = useRef(null);
+  const playbackRestoreRef = useRef(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const [quality, setQuality] = useState(VIDEO_QUALITY.auto);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [failedSources, setFailedSources] = useState([]);
+  const autoPrefersUhd = shouldAutoUseUhd({
+    fullscreen,
+    screenWidth: window.screen?.width,
+    screenHeight: window.screen?.height,
+    devicePixelRatio: window.devicePixelRatio,
+    saveData: navigator.connection?.saveData === true
+  });
+  const source = useMemo(
+    () => resolveVideoSource(sources, quality, autoPrefersUhd, failedSources),
+    [autoPrefersUhd, failedSources, quality, sources]
+  );
+  const sourceSrc = source?.src;
+  const hasHd = Boolean(sources?.hd?.src);
+  const hasUhd = Boolean(sources?.uhd?.src);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    if (!('IntersectionObserver' in window)) {
+      queueMicrotask(() => setShouldLoad(true));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setShouldLoad(true);
+      } else if (!isFullscreenVideo(video)) {
+        video.pause();
+      }
+    }, { rootMargin: '320px 0px' });
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    const syncFullscreenState = () => setFullscreen(isFullscreenVideo(video));
+    document.addEventListener('fullscreenchange', syncFullscreenState);
+    document.addEventListener('webkitfullscreenchange', syncFullscreenState);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreenState);
+      document.removeEventListener('webkitfullscreenchange', syncFullscreenState);
+    };
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !shouldLoad) return undefined;
+
+    if (!sourceSrc) {
+      video.removeAttribute('src');
+      video.load();
+      return undefined;
+    }
+
+    const nextSrc = new URL(sourceSrc, window.location.href).href;
+    if (video.currentSrc === nextSrc || video.src === nextSrc) return undefined;
+
+    const hasCurrentSource = Boolean(video.currentSrc);
+    playbackRestoreRef.current ??= {
+      currentTime: hasCurrentSource && Number.isFinite(video.currentTime) ? video.currentTime : 0,
+      playbackRate: video.playbackRate,
+      wasPlaying: hasCurrentSource && !video.paused && !video.ended
+    };
+
+    let cancelled = false;
+    const restorePlayback = () => {
+      if (cancelled || video.currentSrc !== nextSrc) return;
+
+      const restore = playbackRestoreRef.current;
+      playbackRestoreRef.current = null;
+      if (!restore) return;
+
+      if (restore.currentTime > 0 && Number.isFinite(video.duration)) {
+        video.currentTime = Math.min(restore.currentTime, Math.max(0, video.duration - 0.05));
+      }
+      video.playbackRate = restore.playbackRate;
+      if (restore.wasPlaying && isActive?.(video) !== false) {
+        void video.play().catch(() => {});
+      }
+    };
+
+    video.addEventListener('loadedmetadata', restorePlayback, { once: true });
+    video.src = sourceSrc;
+    if (hasCurrentSource) {
+      video.load();
+    }
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener('loadedmetadata', restorePlayback);
+    };
+  }, [isActive, shouldLoad, sourceSrc]);
+
+  if (!hasHd && !hasUhd) {
     return <div className="video-placeholder">{label}</div>;
   }
 
+  const fallbackSrc = sources.uhd?.src || sources.hd?.src;
+  const handleSourceError = () => {
+    if (!sourceSrc) return;
+    setFailedSources((current) => current.includes(sourceSrc) ? current : [...current, sourceSrc]);
+    if (quality !== VIDEO_QUALITY.auto) {
+      const fallbackQuality = source?.quality === VIDEO_QUALITY.uhd
+        ? VIDEO_QUALITY.hd
+        : VIDEO_QUALITY.uhd;
+      if (sources[fallbackQuality]?.src) setQuality(fallbackQuality);
+    }
+  };
+  const handleQualityChange = (event) => {
+    const nextQuality = event.target.value;
+    const retrySrc = sources[nextQuality]?.src;
+    setFailedSources((current) => nextQuality === VIDEO_QUALITY.auto
+      ? []
+      : current.filter((failedSrc) => failedSrc !== retrySrc));
+    setQuality(nextQuality);
+  };
+  const handleLoadedMetadata = (event) => {
+    const video = event.currentTarget;
+    const resumeTime = Number.parseFloat(video.dataset.resumeTime);
+    const resumeRate = Number.parseFloat(video.dataset.resumeRate);
+
+    if (Number.isFinite(resumeTime) && resumeTime > 0 && Number.isFinite(video.duration)) {
+      video.currentTime = Math.min(resumeTime, Math.max(0, video.duration - 0.05));
+    }
+    if (Number.isFinite(resumeRate) && resumeRate > 0) {
+      video.playbackRate = resumeRate;
+    }
+    delete video.dataset.resumeTime;
+    delete video.dataset.resumeRate;
+  };
+
   return (
     <figure className="video-frame">
-      <figcaption className="video-label">{label}</figcaption>
-      <video controls playsInline preload="metadata" aria-label={label}>
-        <source src={src} type={type} />
-        <a href={src}>Open the {label.toLowerCase()} file.</a>
-      </video>
+      <figcaption className="video-label">
+        <span>{label}</span>
+        {hasHd && hasUhd && source && (
+          <select
+            className="video-quality-select"
+            value={quality}
+            onChange={handleQualityChange}
+            aria-label={`${label} quality`}
+          >
+            <option value={VIDEO_QUALITY.auto}>Auto</option>
+            <option value={VIDEO_QUALITY.hd}>1080p</option>
+            <option value={VIDEO_QUALITY.uhd}>4K</option>
+          </select>
+        )}
+      </figcaption>
+      <div className="video-stage">
+        <video
+          ref={videoRef}
+          controls
+          playsInline
+          preload="none"
+          poster={poster}
+          aria-label={label}
+          data-quality={source?.quality}
+          onPlay={(event) => onPlay?.(event.currentTarget)}
+          onLoadedMetadata={handleLoadedMetadata}
+          onError={handleSourceError}
+        >
+          <a href={fallbackSrc}>Open the {label.toLowerCase()} file.</a>
+        </video>
+        {!source && shouldLoad && (
+          <div className="video-placeholder video-error" role="status">{label} video unavailable</div>
+        )}
+      </div>
     </figure>
   );
 }
