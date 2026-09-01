@@ -5,6 +5,7 @@ import { memo, Suspense, useState, useEffect, useMemo, useRef, useCallback } fro
 import Experience from './Experience';
 import { Joystick } from 'react-joystick-component';
 import { useJoystickControls } from 'ecctrl'; // Import the store hook
+import { loadCamcorderManifest } from './camcorderManifest';
 import { camcorderVideos } from './media';
 import { profile } from './profile';
 import { resolveVideoSource, shouldAutoUseUhd, VIDEO_QUALITY } from './videoQuality';
@@ -639,7 +640,7 @@ function suspendVideo(video) {
   video.src = source;
 }
 
-function CamcorderProject({ onExit }) {
+function CamcorderProject({ onExit, videos = camcorderVideos }) {
   const activeVideoRef = useRef(null);
   const handleVideoPlay = useCallback((video) => {
     if (activeVideoRef.current && activeVideoRef.current !== video) {
@@ -670,8 +671,8 @@ function CamcorderProject({ onExit }) {
       </header>
 
       <section className="video-grid" aria-label="Project videos">
-        <CamcorderVideo label="footage" onPlay={handleVideoPlay} isActive={isVideoActive} {...camcorderVideos.footage} />
-        <CamcorderVideo label="cad" onPlay={handleVideoPlay} isActive={isVideoActive} {...camcorderVideos.cad} />
+        <CamcorderVideo label="footage" onPlay={handleVideoPlay} isActive={isVideoActive} {...videos.footage} />
+        <CamcorderVideo label="cad" onPlay={handleVideoPlay} isActive={isVideoActive} {...videos.cad} />
       </section>
 
       <section className="photo-grid" aria-label="Camcorder photo locations">
@@ -694,7 +695,7 @@ function CamcorderProject({ onExit }) {
       </section>
 
       <section className="video-grid cassette-video" aria-label="Custom cassette deck mechanics video">
-        <CamcorderVideo label="custom cassette deck mechanics" onPlay={handleVideoPlay} isActive={isVideoActive} {...camcorderVideos.external} />
+        <CamcorderVideo label="custom cassette deck mechanics" onPlay={handleVideoPlay} isActive={isVideoActive} {...videos.external} />
       </section>
 
       <section className="build-summary" aria-labelledby="build-summary-title">
@@ -745,8 +746,12 @@ function CamcorderVideo({ label, poster, sources, onPlay, isActive }) {
     [autoPrefersUhd, failedSources, quality, sources]
   );
   const sourceSrc = source?.src;
-  const hasHd = Boolean(sources?.hd?.src);
-  const hasUhd = Boolean(sources?.uhd?.src);
+  const masterQuality = sources?.master?.quality === VIDEO_QUALITY.hd
+    ? VIDEO_QUALITY.hd
+    : VIDEO_QUALITY.uhd;
+  const hasHd = Boolean(sources?.hd?.src) || Boolean(sources?.master?.src && masterQuality === VIDEO_QUALITY.hd);
+  const hasUhd = Boolean(sources?.uhd?.src) || Boolean(sources?.master?.src && masterQuality === VIDEO_QUALITY.uhd);
+  const hasQualityChoices = Boolean(sources?.hd?.src && sources?.uhd?.src);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -836,16 +841,10 @@ function CamcorderVideo({ label, poster, sources, onPlay, isActive }) {
     return <div className="video-placeholder">{label}</div>;
   }
 
-  const fallbackSrc = sources.uhd?.src || sources.hd?.src;
+  const fallbackSrc = sources.master?.src || sources.uhd?.src || sources.hd?.src;
   const handleSourceError = () => {
     if (!sourceSrc) return;
     setFailedSources((current) => current.includes(sourceSrc) ? current : [...current, sourceSrc]);
-    if (quality !== VIDEO_QUALITY.auto) {
-      const fallbackQuality = source?.quality === VIDEO_QUALITY.uhd
-        ? VIDEO_QUALITY.hd
-        : VIDEO_QUALITY.uhd;
-      if (sources[fallbackQuality]?.src) setQuality(fallbackQuality);
-    }
   };
   const handleQualityChange = (event) => {
     const nextQuality = event.target.value;
@@ -874,7 +873,7 @@ function CamcorderVideo({ label, poster, sources, onPlay, isActive }) {
     <figure className="video-frame">
       <figcaption className="video-label">
         <span>{label}</span>
-        {hasHd && hasUhd && source && (
+        {hasQualityChoices && source && (
           <select
             className="video-quality-select"
             value={quality}
@@ -1087,16 +1086,36 @@ function StartupMenu({ onSelect }) {
 
 function App() {
   const [project, setProject] = useState(null);
+  const [resolvedCamcorderVideos, setResolvedCamcorderVideos] = useState(camcorderVideos);
+  const [projectCamcorderVideos, setProjectCamcorderVideos] = useState(camcorderVideos);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void loadCamcorderManifest({
+      fallback: camcorderVideos,
+      signal: controller.signal
+    }).then((videos) => {
+      if (!controller.signal.aborted) setResolvedCamcorderVideos(videos);
+    });
+
+    return () => controller.abort();
+  }, []);
+
+  const handleProjectSelect = (nextProject) => {
+    if (nextProject === 'camcorder') setProjectCamcorderVideos(resolvedCamcorderVideos);
+    setProject(nextProject);
+  };
 
   if (project === 'camcorder') {
-    return <CamcorderProject onExit={() => setProject(null)} />;
+    return <CamcorderProject videos={projectCamcorderVideos} onExit={() => setProject(null)} />;
   }
 
   if (project === 'sandbox') {
     return <SolidWorksSandbox onExit={() => setProject(null)} />;
   }
 
-  return <StartupMenu onSelect={setProject} />;
+  return <StartupMenu onSelect={handleProjectSelect} />;
 }
 
 export default App;

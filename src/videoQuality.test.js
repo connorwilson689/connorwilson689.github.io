@@ -4,7 +4,8 @@ import { resolveVideoSource, shouldAutoUseUhd, VIDEO_QUALITY } from './videoQual
 
 const sources = {
   hd: { src: 'footage-1080p.mp4', type: 'video/mp4' },
-  uhd: { src: 'footage.mp4', type: 'video/mp4' }
+  uhd: { src: 'footage-2160p.mp4', type: 'video/mp4' },
+  master: { src: 'footage.mp4', type: 'video/mp4', quality: VIDEO_QUALITY.uhd }
 };
 
 test('auto uses HD unless UHD is preferred', () => {
@@ -36,7 +37,29 @@ test('a failed rendition falls back and all failures return no source', () => {
     VIDEO_QUALITY.uhd
   );
   assert.equal(
-    resolveVideoSource(sources, VIDEO_QUALITY.auto, false, [sources.hd.src, sources.uhd.src]),
+    resolveVideoSource(sources, VIDEO_QUALITY.auto, false, [sources.hd.src, sources.uhd.src]).sourceKey,
+    'master'
+  );
+  assert.equal(
+    resolveVideoSource(sources, VIDEO_QUALITY.auto, false, [
+      sources.hd.src,
+      sources.uhd.src,
+      sources.master.src
+    ]),
     null
   );
+});
+
+test('an explicit 4K choice falls back to the untouched 4K master before HD', () => {
+  const source = resolveVideoSource(sources, VIDEO_QUALITY.uhd, false, [sources.uhd.src]);
+
+  assert.equal(source.sourceKey, 'master');
+  assert.equal(source.quality, VIDEO_QUALITY.uhd);
+});
+
+test('a master-only asset remains playable at its declared quality', () => {
+  const source = resolveVideoSource({ master: sources.master });
+
+  assert.equal(source.src, sources.master.src);
+  assert.equal(source.quality, VIDEO_QUALITY.uhd);
 });

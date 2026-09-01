@@ -25,11 +25,21 @@ export function resolveVideoSource(sources, quality = VIDEO_QUALITY.auto, prefer
   const fallbackQuality = preferredQuality === VIDEO_QUALITY.uhd
     ? VIDEO_QUALITY.hd
     : VIDEO_QUALITY.uhd;
+  const masterQuality = sources?.master?.quality === VIDEO_QUALITY.hd
+    ? VIDEO_QUALITY.hd
+    : VIDEO_QUALITY.uhd;
+  const candidates = quality === VIDEO_QUALITY.uhd && masterQuality === VIDEO_QUALITY.uhd
+    ? [preferredQuality, 'master', fallbackQuality]
+    : [preferredQuality, fallbackQuality, 'master'];
 
-  for (const candidate of [preferredQuality, fallbackQuality]) {
+  for (const candidate of candidates) {
     const source = sources?.[candidate];
     if (source?.src && !failed.has(source.src)) {
-      return { ...source, quality: candidate };
+      return {
+        ...source,
+        quality: candidate === 'master' ? masterQuality : candidate,
+        sourceKey: candidate
+      };
     }
   }
 
