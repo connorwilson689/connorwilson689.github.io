@@ -640,14 +640,15 @@ function suspendVideo(video) {
   video.src = source;
 }
 
-function CamcorderProject({ onExit, videos = camcorderVideos }) {
+function CamcorderProject({ onExit, onPlaybackStart, videos = camcorderVideos }) {
   const activeVideoRef = useRef(null);
   const handleVideoPlay = useCallback((video) => {
+    onPlaybackStart?.();
     if (activeVideoRef.current && activeVideoRef.current !== video) {
       suspendVideo(activeVideoRef.current);
     }
     activeVideoRef.current = video;
-  }, []);
+  }, [onPlaybackStart]);
   const isVideoActive = useCallback((video) => activeVideoRef.current === video, []);
 
   return (
@@ -1088,6 +1089,10 @@ function App() {
   const [project, setProject] = useState(null);
   const [resolvedCamcorderVideos, setResolvedCamcorderVideos] = useState(camcorderVideos);
   const [projectCamcorderVideos, setProjectCamcorderVideos] = useState(camcorderVideos);
+  const [camcorderCatalogFrozen, setCamcorderCatalogFrozen] = useState(false);
+  const latestCamcorderVideosRef = useRef(camcorderVideos);
+  const manifestSettledRef = useRef(false);
+  const camcorderPlaybackStartedRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1096,19 +1101,44 @@ function App() {
       fallback: camcorderVideos,
       signal: controller.signal
     }).then((videos) => {
-      if (!controller.signal.aborted) setResolvedCamcorderVideos(videos);
+      if (controller.signal.aborted) return;
+
+      latestCamcorderVideosRef.current = videos;
+      manifestSettledRef.current = true;
+      setResolvedCamcorderVideos(videos);
+      if (camcorderPlaybackStartedRef.current) {
+        setProjectCamcorderVideos(videos);
+        setCamcorderCatalogFrozen(true);
+      }
     });
 
     return () => controller.abort();
   }, []);
 
   const handleProjectSelect = (nextProject) => {
-    if (nextProject === 'camcorder') setProjectCamcorderVideos(resolvedCamcorderVideos);
+    if (nextProject === 'camcorder') {
+      camcorderPlaybackStartedRef.current = false;
+      setProjectCamcorderVideos(latestCamcorderVideosRef.current);
+      setCamcorderCatalogFrozen(false);
+    }
     setProject(nextProject);
+  };
+  const handleCamcorderPlaybackStart = () => {
+    camcorderPlaybackStartedRef.current = true;
+    if (!manifestSettledRef.current) return;
+
+    setProjectCamcorderVideos(latestCamcorderVideosRef.current);
+    setCamcorderCatalogFrozen(true);
   };
 
   if (project === 'camcorder') {
-    return <CamcorderProject videos={projectCamcorderVideos} onExit={() => setProject(null)} />;
+    return (
+      <CamcorderProject
+        videos={camcorderCatalogFrozen ? projectCamcorderVideos : resolvedCamcorderVideos}
+        onPlaybackStart={handleCamcorderPlaybackStart}
+        onExit={() => setProject(null)}
+      />
+    );
   }
 
   if (project === 'sandbox') {

@@ -14,11 +14,12 @@ import {
 } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const DEFAULT_CATALOG = 'media/camcorder.pipeline.json';
 const MANIFEST_NAME = 'manifest-v1.json';
 const MIME_TYPE = 'video/mp4';
+const SOURCE_ORIGIN = 'https://pub-27f889cb448f4fa49aa8594609bc3cf2.r2.dev/';
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -66,10 +67,8 @@ export function validateCatalog(catalog) {
     if (typeof asset.sourceKey !== 'string' || !asset.sourceKey.startsWith('camcorder/') || asset.sourceKey.includes('..')) {
       throw new Error(`Invalid source key for ${assetId}`);
     }
-    try {
-      const sourceUrl = new URL(asset.sourceUrl);
-      if (sourceUrl.protocol !== 'https:') throw new Error();
-    } catch {
+    const expectedSourceUrl = new URL(asset.sourceKey, SOURCE_ORIGIN).href;
+    if (asset.sourceUrl !== expectedSourceUrl) {
       throw new Error(`Invalid source URL for ${assetId}`);
     }
     if (!isRecord(asset.renditions)) throw new Error(`Missing renditions for ${assetId}`);
@@ -158,7 +157,8 @@ export async function createSourceFingerprint(catalog, fetchImpl = globalThis.fe
   const sources = await Promise.all(Object.values(catalog.assets).map((asset) => (
     getSourceIdentity(asset.sourceUrl, fetchImpl)
   )));
-  return hashText(stableStringify({ catalog, sources }));
+  const pipelineHash = hashText(readFileSync(fileURLToPath(import.meta.url), 'utf8'));
+  return hashText(stableStringify({ catalog, pipelineHash, sources }));
 }
 
 function getFfmpegVersion() {
@@ -208,7 +208,7 @@ function validateRendition(filePath, rendition, sourceDuration, maxOutputBytes) 
   if (!Number.isFinite(duration) || Math.abs(duration - sourceDuration) > 0.75) {
     throw new Error(`${basename(filePath)} has an unexpected duration`);
   }
-  run('ffmpeg', ['-v', 'error', '-i', filePath, '-t', '2', '-f', 'null', '-']);
+  run('ffmpeg', ['-v', 'error', '-i', filePath, '-f', 'null', '-']);
   return { bytes, duration };
 }
 
@@ -239,18 +239,27 @@ function encodeRendition(sourcePath, outputPath, rendition, encoding) {
   ]);
 }
 
-function cacheIsComplete(cacheDir, catalog, fingerprint) {
+async function cacheIsComplete(cacheDir, catalog, fingerprint) {
   const manifestPath = join(cacheDir, MANIFEST_NAME);
   if (!existsSync(manifestPath)) return false;
   try {
     const manifest = readJson(manifestPath);
     if (manifest.version !== 1 || manifest.revision !== fingerprint) return false;
-    return Object.entries(catalog.assets).every(([assetId, asset]) => (
-      Object.keys(asset.renditions).every((quality) => {
+    for (const [assetId, asset] of Object.entries(catalog.assets)) {
+      for (const quality of Object.keys(asset.renditions)) {
         const source = manifest.assets?.[assetId]?.sources?.[quality];
-        return typeof source?.src === 'string' && existsSync(join(cacheDir, source.src));
-      })
-    ));
+        if (
+          typeof source?.src !== 'string'
+          || !source.src.startsWith(`renditions/${assetId}/`)
+          || source.src.includes('..')
+        ) return false;
+
+        const cachePath = join(cacheDir, source.src);
+        if (!existsSync(cachePath) || statSync(cachePath).size !== source.bytes) return false;
+        if (await hashFile(cachePath) !== source.sha256) return false;
+      }
+    }
+    return true;
   } catch {
     return false;
   }
@@ -261,6 +270,9 @@ function copyCacheToOutput(cacheDir, outputDir, manifest) {
   mkdirSync(outputDir, { recursive: true });
   for (const [assetId, asset] of Object.entries(manifest.assets)) {
     for (const [quality, source] of Object.entries(asset.sources)) {
+      if (!source.src.startsWith(`renditions/${assetId}/`) || source.src.includes('..')) {
+        throw new Error(`Unsafe cached path for ${assetId}.${quality}`);
+      }
       const destination = join(outputDir, source.src);
       mkdirSync(dirname(destination), { recursive: true });
       copyFileSync(join(cacheDir, source.src), destination);
@@ -276,7 +288,7 @@ async function buildPagesMedia(options) {
   const outputDir = resolve(options.output || 'dist/videos/camcorder');
   const fingerprint = options.fingerprint || await createSourceFingerprint(catalog);
 
-  if (cacheIsComplete(cacheDir, catalog, fingerprint)) {
+  if (await cacheIsComplete(cacheDir, catalog, fingerprint)) {
     const manifest = readJson(join(cacheDir, MANIFEST_NAME));
     copyCacheToOutput(cacheDir, outputDir, manifest);
     process.stderr.write('Camcorder renditions restored from the Actions cache\n');

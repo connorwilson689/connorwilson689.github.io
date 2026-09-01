@@ -9,16 +9,16 @@
           "width": 1920,
           "height": 1080,
           "crf": 22,
-          "maxRate": "8M",
-          "bufferSize": "16M",
+          "maxRate": "7M",
+          "bufferSize": "14M",
           "level": "4.2"
         },
         "uhd": {
           "width": 3840,
           "height": 2160,
           "crf": 21,
-          "maxRate": "20M",
-          "bufferSize": "40M",
+          "maxRate": "18M",
+          "bufferSize": "36M",
           "level": "5.1"
         }
       }
@@ -31,16 +31,16 @@
           "width": 1920,
           "height": 1080,
           "crf": 22,
-          "maxRate": "8M",
-          "bufferSize": "16M",
+          "maxRate": "7M",
+          "bufferSize": "14M",
           "level": "4.2"
         },
         "uhd": {
           "width": 3840,
           "height": 2160,
           "crf": 21,
-          "maxRate": "20M",
-          "bufferSize": "40M",
+          "maxRate": "18M",
+          "bufferSize": "36M",
           "level": "5.1"
         }
       }
@@ -54,6 +54,6 @@
     "audioBitrate": "160k",
     "keyframeSeconds": 2,
     "maxOutputBytes": 314572800,
-    "maxPublishedBytes": 838860800
+    "maxPublishedBytes": 524288000
   }
 }
