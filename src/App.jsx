@@ -275,7 +275,7 @@ function SolidWorksSandbox({ onExit }) {
 
   //RESOLUTION LOCK
   const [dpr, setDpr] = useState(1); // State to hold our calculated resolution
-  const [pixelationWidth, setPixelationWidth] = useState(400);
+  const [targetRenderWidth, setTargetRenderWidth] = useState(400);
   const [cameraSensitivity, setCameraSensitivity] = useState(1.6);
   const [showFallMessage, setShowFallMessage] = useState(false);
   const [loopingThoughts, setLoopingThoughts] = useState([]);
@@ -291,9 +291,8 @@ function SolidWorksSandbox({ onExit }) {
 
   useEffect(() => {
     const updateResolution = () => {
-      // Lower number = chunkier pixels. Higher number = smoother.
-      // The slider updates this target render width in real time.
-      let calculatedDpr = pixelationWidth / window.innerWidth;
+      // Use the slider as a target width, then respect the device's render limit.
+      let calculatedDpr = targetRenderWidth / window.innerWidth;
       
       // 3. Prevent it from rendering higher than the device's actual limits
       calculatedDpr = Math.min(calculatedDpr, window.devicePixelRatio || 1);
@@ -304,7 +303,7 @@ function SolidWorksSandbox({ onExit }) {
     updateResolution(); // Run on startup
     window.addEventListener('resize', updateResolution); // Run if they turn their phone sideways
     return () => window.removeEventListener('resize', updateResolution);
-  }, [pixelationWidth]);
+  }, [targetRenderWidth]);
 
   useEffect(() => {
     let thoughtIndex = 0
@@ -457,27 +456,22 @@ function SolidWorksSandbox({ onExit }) {
         }}
       >
         <label
-          htmlFor="pixelation-slider"
+          htmlFor="resolution-slider"
           style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}
         >
-          <span>Pixelation</span>
-          <span>{pixelationWidth}px</span>
+          <span>Resolution</span>
         </label>
         <input
-          id="pixelation-slider"
+          id="resolution-slider"
           type="range"
           min="180"
           max="1200"
           step="20"
-          value={pixelationWidth}
-          onChange={(event) => setPixelationWidth(Number(event.target.value))}
+          value={targetRenderWidth}
+          onChange={(event) => setTargetRenderWidth(Number(event.target.value))}
           style={{ width: '100%', accentColor: '#9ed4ff' }}
-          aria-label="Adjust screen pixelation"
+          aria-label="Adjust render resolution"
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, opacity: 0.78 }}>
-          <span>chunky</span>
-          <span>smooth</span>
-        </div>
 
         <label
           htmlFor="camera-sensitivity-slider"
@@ -497,10 +491,6 @@ function SolidWorksSandbox({ onExit }) {
           style={{ width: '100%', accentColor: '#ffd18f' }}
           aria-label="Adjust camera sensitivity"
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, opacity: 0.78 }}>
-          <span>gentle</span>
-          <span>quick</span>
-        </div>
 
         <button
           type="button"
