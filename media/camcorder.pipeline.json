@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "assets": {
+    "footage": {
+      "sourceKey": "camcorder/footage.mp4",
+      "sourceUrl": "https://pub-27f889cb448f4fa49aa8594609bc3cf2.r2.dev/camcorder/footage.mp4",
+      "renditions": {
+        "hd": {
+          "width": 1920,
+          "height": 1080,
+          "crf": 22,
+          "maxRate": "7M",
+          "bufferSize": "14M",
+          "level": "4.2"
+        },
+        "uhd": {
+          "width": 3840,
+          "height": 2160,
+          "crf": 21,
+          "maxRate": "18M",
+          "bufferSize": "36M",
+          "level": "5.1"
+        }
+      }
+    },
+    "cad": {
+      "sourceKey": "camcorder/cad-video.mp4",
+      "sourceUrl": "https://pub-27f889cb448f4fa49aa8594609bc3cf2.r2.dev/camcorder/cad-video.mp4",
+      "renditions": {
+        "hd": {
+          "width": 1920,
+          "height": 1080,
+          "crf": 22,
+          "maxRate": "7M",
+          "bufferSize": "14M",
+          "level": "4.2"
+        },
+        "uhd": {
+          "width": 3840,
+          "height": 2160,
+          "crf": 21,
+          "maxRate": "18M",
+          "bufferSize": "36M",
+          "level": "5.1"
+        }
+      }
+    }
+  },
+  "encoding": {
+    "videoCodec": "libx264",
+    "preset": "fast",
+    "pixelFormat": "yuv420p",
+    "audioCodec": "aac",
+    "audioBitrate": "160k",
+    "keyframeSeconds": 2,
+    "maxOutputBytes": 314572800,
+    "maxPublishedBytes": 524288000
+  }
+}

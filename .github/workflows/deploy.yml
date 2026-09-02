@@ -4,20 +4,30 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    paths:
+      - .github/workflows/deploy.yml
+      - media/camcorder.pipeline.json
+      - scripts/media/**
+      - src/App.jsx
+      - src/camcorderManifest.js
+      - src/media.js
+      - src/videoQuality.js
   workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * 1'
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 330
 
     steps:
       - name: Checkout repository
@@ -32,25 +42,64 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm test
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Fingerprint source videos
+        if: github.event_name != 'pull_request'
+        id: media
+        run: echo "fingerprint=$(node scripts/media/pipeline.mjs fingerprint)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore generated video cache
+        if: github.event_name != 'pull_request'
+        id: media-cache
+        uses: actions/cache@v4
+        with:
+          path: .media-cache
+          key: camcorder-video-${{ steps.media.outputs.fingerprint }}
+
+      - name: Install video encoder
+        if: github.event_name != 'pull_request'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
       - name: Build site
         run: npm run build
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Build responsive video renditions
+        if: github.event_name != 'pull_request'
+        run: >-
+          node scripts/media/pipeline.mjs build-pages
+          --fingerprint "${{ steps.media.outputs.fingerprint }}"
+          --cache .media-cache
+          --output dist/videos/camcorder
 
       - name: Upload Pages artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
